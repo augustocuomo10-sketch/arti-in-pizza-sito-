@@ -1,0 +1,889 @@
+/* Arti in Pizza — design tokens condivisi (vedi documento Fase 1) */
+
+@font-face{
+  font-family:"Fredoka";
+  font-style:normal;
+  font-weight:300 700;
+  font-display:swap;
+  src:url("../fonts/fredoka.woff2") format("woff2");
+}
+@font-face{
+  font-family:"Archivo";
+  font-style:normal;
+  font-weight:400 700;
+  font-display:swap;
+  src:url("../fonts/archivo-normal.woff2") format("woff2");
+}
+@font-face{
+  font-family:"Archivo";
+  font-style:italic;
+  font-weight:400 600;
+  font-display:swap;
+  src:url("../fonts/archivo-italic.woff2") format("woff2");
+}
+
+:root{
+  --cream:#FAFDFE;
+  --cream-2:#E4F4FA;
+  --ink:#152430;
+  --ink-soft:#4C6072;
+  --blue:#1467A6;
+  --blue-ink:#0E3F63;
+  --azzurro:#1FB2E0;
+  --red:#E0392A;
+  --red-ink:#B32E21;
+  --green:#3F8F5C;
+  --line:rgba(20,103,166,0.16);
+  --radius-sm:6px;
+  --radius:12px;
+  --radius-lg:18px;
+  --measure:640px;
+  --header-h:64px;
+  /* blu profondo fisso — non cambia con il tema, per le bande "texture di marca" */
+  --deep:#0F2C46;
+  --deep-2:#123A5C;
+  --deep-text:#F4FAFD;
+}
+
+/* ---------- texture di marca: pizza, pennello, mestolo — stile canvas ripetuto ----------
+   Il pattern è inlineato direttamente qui (niente var() con url() dentro) per
+   escludere ogni dubbio di supporto: più robusto e più facile da ispezionare. */
+.texture-band{
+  background-color:var(--deep);
+  background-image:
+    linear-gradient(160deg, var(--deep-2), var(--deep) 60%),
+    url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27120%27%20height%3D%27120%27%3E%0A%3Cg%20fill%3D%27none%27%20stroke%3D%27%23FFFFFF%27%20stroke-width%3D%272.4%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20opacity%3D%270.75%27%3E%0A%3Cpath%20d%3D%27M20%206%20L34%2030%20L6%2030%20Z%27%2F%3E%0A%3Ccircle%20cx%3D%2720%27%20cy%3D%2720%27%20r%3D%271.8%27%20fill%3D%27%23FFFFFF%27%20stroke%3D%27none%27%2F%3E%0A%3Ccircle%20cx%3D%2714%27%20cy%3D%2726%27%20r%3D%271.8%27%20fill%3D%27%23FFFFFF%27%20stroke%3D%27none%27%2F%3E%0A%3Ccircle%20cx%3D%2726%27%20cy%3D%2726%27%20r%3D%271.8%27%20fill%3D%27%23FFFFFF%27%20stroke%3D%27none%27%2F%3E%0A%3Cline%20x1%3D%2772%27%20y1%3D%2734%27%20x2%3D%2787%27%20y2%3D%2718%27%2F%3E%0A%3Cellipse%20cx%3D%2790%27%20cy%3D%2715%27%20rx%3D%274.5%27%20ry%3D%277%27%20transform%3D%27rotate%28-40%2090%2015%29%27%20fill%3D%27%23FFFFFF%27%20stroke%3D%27none%27%2F%3E%0A%3Cellipse%20cx%3D%2738%27%20cy%3D%2782%27%20rx%3D%2710%27%20ry%3D%276%27%2F%3E%0A%3Cline%20x1%3D%2747%27%20y1%3D%2778%27%20x2%3D%2761%27%20y2%3D%2764%27%2F%3E%0A%3Ccircle%20cx%3D%2796%27%20cy%3D%2760%27%20r%3D%272.2%27%20fill%3D%27%23FFFFFF%27%20stroke%3D%27none%27%2F%3E%0A%3Ccircle%20cx%3D%278%27%20cy%3D%2794%27%20r%3D%272.2%27%20fill%3D%27%23FFFFFF%27%20stroke%3D%27none%27%2F%3E%0A%3Ccircle%20cx%3D%2762%27%20cy%3D%2796%27%20r%3D%272.2%27%20fill%3D%27%23FFFFFF%27%20stroke%3D%27none%27%2F%3E%0A%3Ccircle%20cx%3D%27100%27%20cy%3D%27100%27%20r%3D%272.2%27%20fill%3D%27%23FFFFFF%27%20stroke%3D%27none%27%2F%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+  background-repeat:no-repeat, repeat;
+  background-size:cover, 80px 80px;
+  color:var(--deep-text);
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --cream:#0E1A22;
+    --cream-2:#16323F;
+    --ink:#E7F3F8;
+    --ink-soft:#9FBACB;
+    --blue:#4FB0E6;
+    --blue-ink:#8AD4F5;
+    --azzurro:#38C7F0;
+    --red:#F26856;
+    --red-ink:#F79684;
+    --green:#6FC38E;
+    --line:rgba(231,243,248,0.16);
+  }
+}
+:root[data-theme="dark"]{
+  --cream:#0E1A22; --cream-2:#16323F; --ink:#E7F3F8; --ink-soft:#9FBACB;
+  --blue:#4FB0E6; --blue-ink:#8AD4F5; --azzurro:#38C7F0;
+  --red:#F26856; --red-ink:#F79684; --green:#6FC38E;
+  --line:rgba(231,243,248,0.16);
+}
+:root[data-theme="light"]{
+  --cream:#FAFDFE; --cream-2:#E4F4FA; --ink:#152430; --ink-soft:#4C6072;
+  --blue:#1467A6; --blue-ink:#0E3F63; --azzurro:#1FB2E0;
+  --red:#E0392A; --red-ink:#B32E21; --green:#3F8F5C;
+  --line:rgba(20,103,166,0.16);
+}
+
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:var(--cream);
+  color:var(--ink);
+  font-family:"Archivo",system-ui,sans-serif;
+  font-size:16px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--blue);color:var(--cream);}
+a{color:var(--blue-ink);text-decoration:none;}
+a:hover{text-decoration:underline;}
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible{
+  outline:2px solid var(--azzurro); outline-offset:2px;
+}
+img{max-width:100%;display:block;}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px;}
+.visually-hidden{
+  position:absolute; width:1px; height:1px; overflow:hidden;
+  clip:rect(0 0 0 0); white-space:nowrap;
+}
+.visually-hidden:focus{
+  position:fixed; top:10px; left:10px; width:auto; height:auto;
+  z-index:100; background:var(--blue); color:var(--cream);
+  padding:10px 16px; border-radius:var(--radius); clip:auto;
+}
+
+h1,h2,h3,h4{
+  font-family:"Fredoka",sans-serif;
+  font-weight:700;
+  margin:0 0 10px;
+  text-wrap:balance;
+}
+p{margin:0 0 14px;}
+
+/* ---------- checkerboard divider (trattoria) ---------- */
+.check-rule{
+  height:9px; width:100%;
+  background-image:
+    linear-gradient(45deg, var(--blue) 25%, transparent 25%, transparent 75%, var(--blue) 75%, var(--blue)),
+    linear-gradient(45deg, var(--blue) 25%, transparent 25%, transparent 75%, var(--blue) 75%, var(--blue));
+  background-size:9px 9px; background-position:0 0, 4.5px 4.5px;
+  opacity:0.5;
+}
+
+/* ---------- header / nav — banda scura permanente, come il footer ---------- */
+.site-header{
+  position:sticky; top:0; z-index:50;
+  border-bottom:1px solid color-mix(in srgb, var(--deep-text) 14%, transparent);
+  transition:box-shadow .25s ease, padding .25s ease;
+}
+.site-header.is-scrolled{
+  box-shadow:0 10px 26px rgba(0,0,0,0.28);
+}
+.site-header.is-scrolled .bar{padding:7px 0;}
+.site-header .bar{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:16px; padding:13px 0;
+  transition:padding .25s ease;
+}
+.brandmark{
+  display:inline-flex; align-items:center; gap:10px;
+  font-family:"Fredoka",sans-serif; font-weight:700; font-size:19px; color:var(--deep-text);
+  transition:transform .18s ease;
+}
+.brandmark:hover{transform:scale(1.03);}
+.brandmark span{color:var(--azzurro);}
+.brand-logo{
+  height:64px; width:auto; display:block;
+  transition:height .25s ease;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,0.35));
+}
+.site-header.is-scrolled .brand-logo{height:50px;}
+/* fallback badge, usato solo se il logo non è ancora disponibile */
+.brand-badge{
+  width:36px; height:36px; flex:none; border-radius:50%;
+  background:var(--azzurro); color:var(--deep);
+  display:flex; align-items:center; justify-content:center;
+  font-size:17px; overflow:hidden;
+}
+.brand-badge img{width:100%; height:100%; object-fit:cover; display:block;}
+.main-nav{display:flex; align-items:center; gap:26px;}
+.main-nav a{
+  color:color-mix(in srgb, var(--deep-text) 78%, transparent);
+  font-weight:600; font-size:14px; letter-spacing:0.01em;
+  position:relative; padding-bottom:4px;
+}
+.main-nav a::after{
+  content:""; position:absolute; left:0; right:100%; bottom:0; height:2px;
+  background:var(--azzurro); transition:right .2s ease;
+}
+.main-nav a:hover{color:var(--deep-text); text-decoration:none;}
+.main-nav a:hover::after{right:0;}
+.main-nav a[aria-current="page"]{color:var(--deep-text);}
+.main-nav a[aria-current="page"]::after{right:0;}
+.nav-toggle{display:none;}
+.header-actions{display:flex; align-items:center; gap:10px;}
+.lang-switch{
+  font-size:12.5px; font-weight:700; color:color-mix(in srgb, var(--deep-text) 85%, transparent);
+  border:1px solid color-mix(in srgb, var(--deep-text) 30%, transparent);
+  border-radius:999px; padding:5px 12px;
+  display:inline-flex; align-items:center; gap:5px;
+}
+
+.install-banner{
+  background:var(--deep); color:var(--deep-text);
+  font-size:13px; text-align:center; padding:8px 16px;
+  border-bottom:1px solid color-mix(in srgb, var(--deep-text) 14%, transparent);
+}
+.install-banner strong{font-family:"Fredoka",sans-serif; color:var(--azzurro);}
+.install-banner a{color:var(--deep-text); text-decoration:underline;}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  font-family:"Fredoka",sans-serif; font-weight:600; font-size:15px;
+  padding:12px 22px; border-radius:999px; border:none; cursor:pointer;
+  text-decoration:none; line-height:1;
+  transition:transform .15s ease, filter .15s ease, box-shadow .15s ease;
+}
+.btn:hover{text-decoration:none; filter:brightness(1.06); transform:translateY(-1px);}
+.btn-primary{background:var(--blue); color:var(--cream);}
+.btn-primary:hover{box-shadow:0 6px 16px color-mix(in srgb, var(--blue) 35%, transparent);}
+.btn-order{background:var(--red); color:var(--cream);}
+.btn-order:hover{box-shadow:0 6px 16px color-mix(in srgb, var(--red) 35%, transparent);}
+.btn-outline{background:transparent; color:var(--blue-ink); border:1.5px solid var(--blue);}
+.btn-block{width:100%;}
+.btn-row{display:flex; gap:12px; flex-wrap:wrap;}
+
+/* ---------- hero ---------- */
+.hero{
+  padding:56px 0 40px;
+  position:relative; overflow:hidden;
+  isolation:isolate;
+}
+.hero::before{
+  content:"";
+  position:absolute; inset:-10%;
+  z-index:-2;
+  background-image:
+    radial-gradient(circle, color-mix(in srgb, var(--azzurro) 55%, transparent) 0%, transparent 68%),
+    radial-gradient(circle, color-mix(in srgb, var(--blue) 45%, transparent) 0%, transparent 70%);
+  background-size:52% 52%, 46% 46%;
+  background-repeat:no-repeat;
+  background-position:104% -8%, -6% 96%;
+  opacity:0.16;
+  filter:blur(6px);
+  animation:hero-drift 22s ease-in-out infinite alternate;
+}
+.hero::after{
+  content:"";
+  position:absolute; inset:0;
+  z-index:-1;
+  background-image:
+    linear-gradient(45deg, var(--blue) 25%, transparent 25%, transparent 75%, var(--blue) 75%, var(--blue)),
+    linear-gradient(45deg, var(--blue) 25%, transparent 25%, transparent 75%, var(--blue) 75%, var(--blue));
+  background-size:26px 26px;
+  background-position:0 0, 13px 13px;
+  opacity:0.045;
+  mask-image:linear-gradient(to bottom, black, transparent 85%);
+}
+@keyframes hero-drift{
+  from{transform:translate(0,0) scale(1);}
+  to{transform:translate(-2%,2%) scale(1.06);}
+}
+@media (prefers-reduced-motion: reduce){
+  .hero::before{animation:none;}
+}
+.hero .eyebrow{
+  display:inline-block; font-size:12.5px; font-weight:700; letter-spacing:0.04em;
+  color:var(--blue-ink); background:color-mix(in srgb, var(--azzurro) 32%, transparent);
+  padding:5px 12px; border-radius:999px; margin-bottom:18px;
+}
+.hero h1{font-size:clamp(34px,6vw,54px); line-height:1.05; max-width:720px;}
+.hero h1 .pop{color:var(--blue);}
+.hero .lede{font-size:18px; color:var(--ink-soft); max-width:560px;}
+
+.hero-flex{display:flex; align-items:center; justify-content:space-between; gap:36px;}
+.hero-content{flex:1; min-width:280px;}
+.hero-logo-art{
+  flex:none; width:min(300px, 30vw);
+  opacity:0; transform:scale(.82) rotate(-6deg);
+  animation:hero-logo-in .7s cubic-bezier(.2,.8,.2,1) .15s forwards;
+}
+.hero-logo-art img{
+  width:100%; height:auto; display:block;
+  filter:drop-shadow(0 20px 34px color-mix(in srgb, var(--blue) 30%, transparent));
+}
+@keyframes hero-logo-in{
+  to{opacity:1; transform:scale(1) rotate(0deg);}
+}
+@media (prefers-reduced-motion: reduce){
+  .hero-logo-art{opacity:1; transform:none; animation:none;}
+}
+
+/* ---------- order-mode: ingresso dinamico al caricamento ---------- */
+.order-modes{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:30px 0;
+}
+.order-mode{
+  background:var(--cream-2); border-radius:var(--radius); padding:22px 20px;
+  opacity:0; transform:translateY(28px);
+  animation:order-mode-in .55s cubic-bezier(.2,.8,.2,1) forwards;
+}
+.order-mode:nth-child(1){animation-delay:.05s;}
+.order-mode:nth-child(2){animation-delay:.2s;}
+.order-mode:nth-child(3){animation-delay:.35s;}
+@keyframes order-mode-in{
+  to{opacity:1; transform:translateY(0);}
+}
+.order-mode .icon{font-size:26px; display:block; margin-bottom:10px;}
+.order-mode h3{font-size:17px; margin:0 0 6px;}
+.order-mode p{font-size:13.5px; color:var(--ink-soft); margin:0 0 16px;}
+@media (prefers-reduced-motion: reduce){
+  .order-mode{opacity:1; transform:none; animation:none;}
+}
+
+/* ---------- section scaffolding ---------- */
+section{padding:44px 0;}
+.section-head{max-width:var(--measure); margin-bottom:28px;}
+.section-head p{color:var(--ink-soft); margin:0;}
+
+/* ---------- statement + foto editoriali ---------- */
+.statement-line{
+  font-family:"Fredoka",sans-serif; font-weight:700;
+  font-size:clamp(28px,4.4vw,44px); line-height:1.2;
+  margin:0; max-width:640px;
+}
+.statement-line .pop{color:var(--blue);}
+.statement-grid{
+  display:grid; grid-template-columns:1.2fr 1fr; grid-template-rows:1fr 1fr;
+  gap:16px; height:clamp(340px,42vw,480px); margin-top:32px;
+}
+.statement-photo{
+  border-radius:var(--radius-lg); overflow:hidden;
+  box-shadow:0 14px 30px color-mix(in srgb, var(--deep) 14%, transparent);
+  transition:transform .2s ease;
+}
+.statement-photo:hover{transform:scale(1.015);}
+.statement-photo.tall{grid-row:1 / 3;}
+.statement-photo img{width:100%; height:100%; object-fit:cover; display:block;}
+
+/* ---------- signature pizza teaser: scorrimento orizzontale ---------- */
+.pizza-scroll{
+  display:flex; gap:16px; overflow-x:auto; scroll-snap-type:x mandatory;
+  padding:4px clamp(24px,6vw,calc((100vw - 1080px)/2 + 24px)) 20px;
+  margin:0 calc(50% - 50vw);
+  scrollbar-width:thin;
+}
+.pizza-scroll .pizza-card{
+  flex:0 0 240px; scroll-snap-align:start;
+}
+.pizza-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+.pizza-card{
+  background:var(--cream-2); border-radius:var(--radius); overflow:hidden;
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.pizza-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 10px 24px color-mix(in srgb, var(--blue) 18%, transparent);
+}
+.pizza-card img{
+  width:100%; aspect-ratio:4/3; object-fit:cover; display:block;
+}
+.pizza-card .ph{
+  aspect-ratio:4/3; background:
+    repeating-linear-gradient(45deg, color-mix(in srgb, var(--blue) 8%, transparent) 0 10px, transparent 10px 20px);
+  display:flex; align-items:center; justify-content:center;
+  color:var(--ink-soft); font-size:11.5px; text-align:center; padding:10px;
+  border-bottom:1px dashed var(--line);
+}
+.pizza-card .info{padding:14px;}
+.pizza-card h4{font-size:16px; margin:0 0 4px;}
+.pizza-card .ingr{font-size:12px; color:var(--ink-soft); margin:0 0 10px; min-height:32px;}
+.pizza-card .price{font-family:"Fredoka",sans-serif; font-weight:700; color:var(--blue-ink);}
+
+/* ---------- photo placeholder (generic) ---------- */
+.photo-ph{
+  border-radius:var(--radius-lg);
+  background:repeating-linear-gradient(45deg, color-mix(in srgb, var(--blue) 8%, transparent) 0 12px, transparent 12px 24px);
+  border:1px dashed var(--line);
+  display:flex; align-items:center; justify-content:center;
+  color:var(--ink-soft); font-size:13px; text-align:center; padding:20px;
+  min-height:220px;
+}
+
+/* ---------- storia: foto + testo affiancati ---------- */
+.story-flex{display:flex; gap:44px; align-items:center;}
+.story-photo{flex:1; max-width:360px; flex:none;}
+.story-photo img{
+  width:100%; display:block; border-radius:var(--radius-lg);
+  box-shadow:0 24px 50px color-mix(in srgb, var(--deep) 22%, transparent);
+}
+.story-text{flex:1; min-width:280px;}
+.story-text .quote-big{
+  font-size:clamp(19px,2.4vw,23px); line-height:1.6; color:var(--ink);
+  font-style:italic; margin:0 0 18px;
+}
+.story-text .signature{
+  font-family:"Fredoka",sans-serif; font-weight:700; color:var(--blue-ink);
+  font-size:15px;
+}
+
+/* ---------- percorso di Vincenzo: cartina d'Italia con le tappe ---------- */
+.italy-map-wrap{
+  display:flex; gap:40px; align-items:center; flex-wrap:wrap;
+}
+.italy-map-svg{flex:1; min-width:260px; max-width:340px;}
+.italy-map-svg svg{width:100%; height:auto; display:block;}
+.italy-map-legend{flex:1; min-width:240px; display:flex; flex-direction:column; gap:14px;}
+.italy-map-legend .leg{display:flex; align-items:center; gap:12px;}
+.italy-map-legend .num{
+  width:26px; height:26px; border-radius:50%; flex:none;
+  background:var(--azzurro); color:var(--blue-ink);
+  font-family:"Fredoka",sans-serif; font-weight:700; font-size:13px;
+  display:flex; align-items:center; justify-content:center;
+}
+.italy-map-legend .leg.final .num{
+  background:var(--blue); color:var(--deep-text); width:30px; height:30px; font-size:14px;
+}
+.italy-map-legend .place{font-family:"Fredoka",sans-serif; font-weight:700; font-size:15px; color:var(--ink);}
+.italy-map-legend .role{font-size:12.5px; color:var(--ink-soft); display:block;}
+.italy-map-legend{margin-top:20px; display:flex; flex-direction:column; gap:12px;}
+.italy-map-legend .leg{
+  padding:8px 10px; border-radius:var(--radius); cursor:default;
+  transition:background .15s ease, transform .15s ease;
+}
+.italy-map-legend .leg:hover,
+.italy-map-legend .leg.is-highlighted-from-pin{background:var(--cream-2); transform:translateX(4px);}
+
+/* ---------- storia: percorso + oggi, affiancati ---------- */
+.journey-flex{display:flex; gap:48px; align-items:flex-start;}
+.journey-col{flex:1; min-width:280px;}
+.map-image{
+  position:relative; border-radius:var(--radius-lg); overflow:hidden;
+  background:var(--cream-2);
+}
+.map-image img{width:100%; display:block;}
+.map-pin{
+  position:absolute; transform:translate(-50%,-50%); cursor:pointer;
+  width:26px; height:26px; border-radius:50%;
+  background:var(--azzurro); color:var(--blue-ink);
+  font-family:"Fredoka",sans-serif; font-weight:700; font-size:13px;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 3px 8px rgba(0,0,0,0.25);
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.map-pin.final{width:32px; height:32px; background:var(--blue); color:var(--deep-text); font-size:15px;}
+.map-pin.final::before{
+  content:""; position:absolute; inset:-8px; border-radius:50%;
+  border:2px solid var(--blue); opacity:0.6;
+  animation:pin-beacon 1.8s ease-out infinite;
+}
+.map-pin.is-highlighted{transform:translate(-50%,-50%) scale(1.35); box-shadow:0 6px 16px rgba(0,0,0,0.35);}
+@keyframes pin-beacon{
+  from{transform:scale(1); opacity:0.6;}
+  to{transform:scale(1.9); opacity:0;}
+}
+@media (prefers-reduced-motion: reduce){
+  .map-pin.final::before{animation:none;}
+}
+.today-card{
+  border-radius:var(--radius-lg);
+  padding:44px 38px; margin-bottom:24px;
+}
+.today-card h2{margin:16px 0 16px; color:var(--deep-text);}
+.today-card .quote-big{margin:0; color:var(--deep-text);}
+.today-card .icon-badge{
+  background:color-mix(in srgb, var(--deep-text) 16%, transparent) !important;
+  color:var(--deep-text) !important;
+}
+
+/* ---------- price guarantee — grande, banda a tutto colore ---------- */
+.guarantee{
+  border-radius:var(--radius-lg); padding:44px 40px;
+  position:relative; overflow:hidden;
+}
+.guarantee-top{
+  display:flex; align-items:center; gap:20px; flex-wrap:wrap;
+}
+.guarantee .check{
+  width:64px; height:64px; flex:none; border-radius:50%;
+  background:color-mix(in srgb, var(--deep-text) 18%, transparent);
+  border:2px solid color-mix(in srgb, var(--deep-text) 55%, transparent);
+  display:flex; align-items:center; justify-content:center; font-size:30px;
+  color:var(--deep-text);
+}
+.guarantee-text{flex:1; min-width:240px;}
+.guarantee-text h3{
+  font-size:clamp(24px,3.4vw,34px); margin:0 0 8px; color:var(--deep-text);
+}
+.guarantee-text p{font-size:16px; color:color-mix(in srgb, var(--deep-text) 88%, transparent); margin:0; max-width:520px;}
+.guarantee-more{
+  background:transparent; border:1.5px solid color-mix(in srgb, var(--deep-text) 70%, transparent);
+  color:var(--deep-text);
+  font-family:"Fredoka",sans-serif; font-weight:600; font-size:14px;
+  border-radius:999px; padding:11px 22px; cursor:pointer; flex:none;
+  transition:background .15s ease;
+}
+.guarantee-more:hover{background:color-mix(in srgb, var(--deep-text) 15%, transparent);}
+.guarantee-detail{
+  display:grid; grid-template-rows:0fr; transition:grid-template-rows .3s ease;
+}
+.guarantee[data-open="true"] .guarantee-detail{grid-template-rows:1fr;}
+.guarantee-detail-inner{overflow:hidden;}
+.guarantee-detail p{
+  font-size:15px; color:color-mix(in srgb, var(--deep-text) 90%, transparent); padding-top:22px; margin:0;
+  border-top:1px solid color-mix(in srgb, var(--deep-text) 30%, transparent); margin-top:24px;
+  max-width:640px;
+}
+@media (prefers-reduced-motion: reduce){
+  .guarantee-detail{transition:none;}
+}
+
+/* ---------- stat band: numeri giganti (Dal 1997) ---------- */
+.stat-band{
+  display:flex; align-items:center; gap:36px; flex-wrap:wrap;
+  border-radius:var(--radius-lg); padding:44px 40px;
+}
+.stat-band .num{
+  font-family:"Fredoka",sans-serif; font-weight:700;
+  font-size:clamp(64px,11vw,140px); line-height:0.88;
+  color:var(--deep-text); flex:none;
+}
+.stat-band .text{flex:1; min-width:240px;}
+.stat-band .text h2{font-size:clamp(22px,3vw,28px); margin:0 0 10px; color:var(--deep-text);}
+.stat-band .text p{font-size:15.5px; color:color-mix(in srgb, var(--deep-text) 88%, transparent); margin:0 0 14px; max-width:480px;}
+.stat-band .text a{color:var(--deep-text); font-weight:700;}
+
+/* ---------- scroll reveal ---------- */
+.reveal-on-scroll{
+  opacity:0; transform:translateY(22px);
+  transition:opacity .6s ease, transform .6s ease;
+}
+.reveal-on-scroll.is-visible{opacity:1; transform:translateY(0);}
+
+/* comparsa a cascata per le griglie: pizze, recensioni, info-card, righe menù */
+.reveal-stagger > *{
+  opacity:0; transform:translateY(20px);
+  transition:opacity .5s ease, transform .5s ease;
+}
+.reveal-stagger.is-visible > *{opacity:1; transform:translateY(0);}
+.reveal-stagger.is-visible > *:nth-child(1){transition-delay:.03s;}
+.reveal-stagger.is-visible > *:nth-child(2){transition-delay:.09s;}
+.reveal-stagger.is-visible > *:nth-child(3){transition-delay:.15s;}
+.reveal-stagger.is-visible > *:nth-child(4){transition-delay:.21s;}
+.reveal-stagger.is-visible > *:nth-child(5){transition-delay:.27s;}
+.reveal-stagger.is-visible > *:nth-child(6){transition-delay:.33s;}
+.reveal-stagger.is-visible > *:nth-child(n+7){transition-delay:.37s;}
+
+@media (prefers-reduced-motion: reduce){
+  .reveal-on-scroll, .reveal-stagger > *{opacity:1; transform:none; transition:none;}
+  .order-mode-body, .guarantee-detail{transition:none;}
+}
+
+/* ---------- reviews: punteggio enorme + conteggio animato ---------- */
+.review-hero{
+  display:flex; align-items:center; gap:36px; flex-wrap:wrap;
+  border-radius:var(--radius-lg); padding:48px 40px; margin-bottom:34px;
+}
+.review-hero .score{
+  font-family:"Fredoka",sans-serif; font-weight:700;
+  font-size:clamp(72px,11vw,150px); line-height:0.85; flex:none;
+}
+.review-hero .meta{flex:1; min-width:220px;}
+.review-hero .score{color:var(--deep-text);}
+.review-hero .stars-row{
+  color:var(--deep-text); font-size:clamp(22px,3vw,30px); letter-spacing:3px; margin-bottom:8px;
+}
+.review-hero .count-line{font-size:17px; color:color-mix(in srgb, var(--deep-text) 88%, transparent);}
+.review-hero .count-line strong{
+  font-family:"Fredoka",sans-serif; font-weight:700; color:var(--deep-text);
+  font-variant-numeric:tabular-nums;
+}
+.review-ticker{
+  position:relative; margin-top:22px; padding-top:18px; max-width:480px;
+  border-top:1px solid color-mix(in srgb, var(--deep-text) 22%, transparent);
+}
+.review-ticker .live-dot{
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:10.5px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase;
+  color:color-mix(in srgb, var(--deep-text) 70%, transparent);
+  margin-bottom:8px;
+}
+.review-ticker .live-dot::before{
+  content:""; width:7px; height:7px; border-radius:50%;
+  background:var(--azzurro);
+  animation:ticker-pulse 1.6s ease-in-out infinite;
+}
+.review-ticker .ticks{
+  position:relative; min-height:52px; display:flex; align-items:flex-start; gap:10px;
+}
+.review-ticker .quote-mark{
+  font-family:"Fredoka",sans-serif; font-weight:700; font-size:40px; line-height:0.6;
+  color:var(--azzurro); flex:none; margin-top:4px;
+}
+.review-ticker .tick{
+  position:absolute; left:34px; right:0; top:0;
+  font-size:17px; font-style:italic; line-height:1.4;
+  color:var(--deep-text);
+  opacity:0; transform:translateY(12px) scale(0.98);
+  transition:opacity .55s ease, transform .55s ease;
+}
+.review-ticker .tick.is-active{
+  position:relative;
+  opacity:1; transform:translateY(0) scale(1);
+}
+@keyframes ticker-pulse{
+  0%,100%{opacity:1;} 50%{opacity:0.35;}
+}
+@media (prefers-reduced-motion: reduce){
+  .review-ticker .live-dot::before{animation:none;}
+  .review-ticker .tick{transition:none;}
+}
+.review-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+.review-card{
+  background:var(--cream-2); border-radius:var(--radius-lg); padding:22px;
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.review-card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 10px 22px color-mix(in srgb, var(--blue) 14%, transparent);
+}
+.review-card .quote{font-size:14.5px; color:var(--ink); margin:0 0 14px; line-height:1.5;}
+.review-card .who{font-family:"Fredoka",sans-serif; font-weight:600; font-size:13.5px; color:var(--blue-ink);}
+.review-card .src{font-size:11.5px; color:var(--ink-soft);}
+
+/* ---------- price compare (reuse from Fase 1 doc) ---------- */
+.price-compare{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+.price-card{border-radius:var(--radius-lg); padding:24px;}
+.price-card.ours{background:var(--blue); color:var(--cream);}
+.price-card.other{background:var(--cream-2); color:var(--ink-soft);}
+.price-card .who{font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; font-weight:700; opacity:0.85; display:block; margin-bottom:12px;}
+.price-card .item{font-family:"Fredoka",sans-serif; font-weight:600; font-size:16px; margin-bottom:6px;}
+.price-card .price{font-family:"Fredoka",sans-serif; font-weight:700; font-size:32px; line-height:1;}
+.price-card.other .price{text-decoration:line-through; opacity:0.6;}
+.price-card .price-sub{font-size:12px; margin-top:8px; opacity:0.85;}
+
+/* ---------- menu page: selettore categorie — quadrati di colore, nome dentro ---------- */
+.category-tiles{
+  display:grid; grid-template-columns:repeat(6,1fr); gap:16px;
+  margin:8px 0 40px;
+}
+.category-tile{
+  position:relative; aspect-ratio:1;
+  border:none; border-radius:var(--radius-lg); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  padding:14px; text-align:center;
+  box-shadow:0 10px 22px color-mix(in srgb, var(--deep) 14%, transparent);
+  outline:3px solid transparent; outline-offset:3px;
+  transition:transform .15s ease, box-shadow .2s ease, outline-color .2s ease, filter .15s ease;
+}
+.category-tile:hover{
+  transform:translateY(-6px) scale(1.03);
+  box-shadow:0 18px 32px color-mix(in srgb, var(--deep) 28%, transparent);
+  outline-color:color-mix(in srgb, var(--deep) 45%, transparent);
+  filter:brightness(1.06);
+}
+.category-tile:active{transform:translateY(-2px) scale(0.98);}
+.category-tile.is-active{outline-color:var(--deep);}
+.category-tile.is-active::after{
+  content:"✓"; position:absolute; top:8px; right:8px;
+  width:20px; height:20px; border-radius:50%;
+  background:var(--deep); color:var(--deep-text);
+  font-size:11px; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+}
+.category-tile .tile-label{
+  font-family:"Fredoka",sans-serif; font-weight:700;
+  font-size:clamp(14px,1.5vw,17px); line-height:1.15;
+}
+.category-tile.c-blue{background:var(--blue); color:var(--deep-text);}
+.category-tile.c-azzurro{background:var(--azzurro); color:var(--blue-ink);}
+.category-tile.c-red{background:var(--red); color:var(--deep-text);}
+.category-tile.c-green{background:var(--green); color:var(--deep-text);}
+.category-tile .tile-badge{
+  position:absolute; top:9px; left:50%; transform:translateX(-50%);
+  background:color-mix(in srgb, var(--deep-text) 95%, transparent); color:var(--red-ink);
+  font-family:"Fredoka",sans-serif; font-weight:700; font-size:8.5px; letter-spacing:0.03em;
+  padding:3px 8px; border-radius:999px; white-space:nowrap;
+}
+
+/* ---------- menu page ---------- */
+.menu-tabs{
+  display:flex; gap:8px; flex-wrap:wrap; margin-bottom:28px;
+  position:sticky; top:calc(var(--header-h) + 1px); background:var(--cream);
+  padding:12px 0; z-index:10; border-bottom:1px solid var(--line);
+}
+.menu-tab{
+  font-family:"Fredoka",sans-serif; font-weight:600; font-size:13.5px;
+  background:var(--cream-2); color:var(--ink-soft);
+  border:none; border-radius:999px; padding:9px 16px; cursor:pointer;
+}
+.menu-tab[aria-selected="true"]{background:var(--blue); color:var(--cream);}
+
+.menu-note{
+  background:var(--cream-2); border-radius:var(--radius); padding:14px 18px;
+  font-size:13.5px; color:var(--ink-soft); margin-bottom:30px;
+}
+.menu-note strong{color:var(--ink); font-family:"Fredoka",sans-serif;}
+
+.menu-category{margin-bottom:38px; scroll-margin-top:calc(var(--header-h) + 70px);}
+.menu-category h2{font-size:22px; border-bottom:2px solid var(--line); padding-bottom:10px; margin-bottom:4px;}
+.menu-category .cat-note{font-size:13px; color:var(--ink-soft); margin-bottom:16px;}
+
+.menu-list{display:flex; flex-direction:column;}
+.menu-item{
+  display:grid; grid-template-columns:1fr auto; gap:4px 18px;
+  padding:14px 0; border-bottom:1px solid var(--line);
+}
+.menu-item .name{font-family:"Fredoka",sans-serif; font-weight:600; font-size:16px;}
+.menu-item .ingr{grid-column:1; font-size:13px; color:var(--ink-soft);}
+.menu-item .prices{
+  grid-column:2; grid-row:1 / span 2; align-self:center;
+  display:flex; gap:14px; font-family:"Fredoka",sans-serif; font-weight:700; color:var(--blue-ink);
+  white-space:nowrap;
+}
+.menu-item .prices .p-label{display:block; font-family:"Archivo",sans-serif; font-weight:600; font-size:9.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-soft); text-align:right;}
+
+.menu-item.combo{
+  background:color-mix(in srgb, var(--red) 8%, transparent);
+  border:1.5px solid color-mix(in srgb, var(--red) 24%, transparent);
+  border-radius:var(--radius); padding:14px 16px; border-bottom:none; margin-bottom:10px;
+}
+.menu-item.combo .prices{color:var(--red-ink);}
+.combo-banner{
+  display:inline-flex; align-items:center; gap:8px;
+  background:var(--red); color:var(--deep-text);
+  font-family:"Fredoka",sans-serif; font-weight:700; font-size:12.5px;
+  padding:6px 14px; border-radius:999px; margin-bottom:12px;
+}
+
+/* ---------- table / reservation ---------- */
+.tables-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin:22px 0;}
+.table-chip{
+  background:var(--cream-2); border-radius:var(--radius); padding:16px 8px; text-align:center;
+}
+.table-chip .n{font-family:"Fredoka",sans-serif; font-weight:700; font-size:20px; color:var(--blue-ink);}
+.table-chip .lbl{font-size:11px; color:var(--ink-soft);}
+
+/* ---------- info cards (dove siamo) ---------- */
+/* ---------- pannello combinato: recensioni + mappa ---------- */
+.dove-hero-panel{
+  display:grid; grid-template-columns:1.15fr 1fr;
+  border-radius:var(--radius-lg); overflow:hidden;
+  box-shadow:0 24px 60px color-mix(in srgb, var(--deep) 26%, transparent);
+}
+.dove-hero-panel .panel-half{border-radius:0; margin:0;}
+.dove-hero-panel .review-hero{min-height:360px;}
+.dove-hero-panel .map-embed{border:none;}
+.dove-hero-panel .map-embed iframe{height:100%; min-height:360px;}
+
+/* ---------- blocco indirizzo, protagonista della pagina ---------- */
+.address-block{
+  display:flex; align-items:center; justify-content:space-between; gap:20px;
+  background:var(--cream-2); border-radius:var(--radius-lg);
+  padding:28px 32px; margin:20px 0; text-decoration:none;
+  border:1.5px solid transparent;
+  transition:border-color .2s ease, transform .18s ease, box-shadow .18s ease;
+}
+.address-block:hover{
+  border-color:var(--blue); transform:translateY(-2px); text-decoration:none;
+  box-shadow:0 14px 30px color-mix(in srgb, var(--blue) 16%, transparent);
+}
+.address-block-text{display:flex; flex-direction:column;}
+.address-block-main{
+  font-family:"Fredoka",sans-serif; font-weight:700; color:var(--ink);
+  font-size:clamp(20px,3vw,28px);
+}
+.address-block-sub{font-size:13.5px; color:var(--ink-soft); margin-top:6px;}
+.address-block-arrow{
+  font-size:26px; color:var(--blue); flex:none;
+  transition:transform .2s ease;
+}
+.address-block:hover .address-block-arrow{transform:translateX(6px);}
+
+/* ---------- ordina & prenota: pannelli grandi per modalità ---------- */
+.order-panel-section{padding-top:14px; padding-bottom:14px;}
+.order-panel{
+  display:flex; gap:26px; align-items:flex-start;
+  background:var(--cream-2); border-radius:var(--radius-lg); padding:32px;
+}
+.order-panel .icon-badge{width:56px; height:56px; font-size:26px; margin-bottom:0; flex:none;}
+.order-panel-body{flex:1; min-width:0;}
+.order-panel-body h2{font-size:clamp(21px,2.6vw,26px); margin:0 0 8px;}
+.order-panel-body p{color:var(--ink-soft); font-size:15px; max-width:640px;}
+.order-panel-body .price-compare,
+.order-panel-body .tables-grid{margin:20px 0 30px;}
+.order-panel-body .btn-row{margin-top:6px;}
+
+.info-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+.info-card{
+  background:var(--cream-2); border-radius:var(--radius-lg); padding:24px;
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.info-card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 10px 22px color-mix(in srgb, var(--blue) 14%, transparent);
+}
+.info-card .icon-badge{
+  width:46px; height:46px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:21px; margin-bottom:14px; color:var(--cream);
+}
+.info-card .icon-badge.c-blue{background:var(--blue);}
+.info-card .icon-badge.c-azzurro{background:var(--azzurro); color:var(--blue-ink);}
+.info-card .icon-badge.c-red{background:var(--red);}
+.info-card .icon-badge.c-green{background:var(--green);}
+.info-card h3{font-size:17px; margin:0 0 8px;}
+.info-card p{font-size:14.5px; color:var(--ink-soft); margin:0;}
+.info-card .big{
+  font-family:"Fredoka",sans-serif; font-weight:700; font-size:20px; color:var(--ink);
+  display:block; margin-bottom:2px;
+}
+.mini-tables{display:flex; gap:6px; margin-top:12px; flex-wrap:wrap;}
+.mini-tables span{
+  background:var(--cream); border:1px solid var(--line); border-radius:8px;
+  padding:5px 9px; font-family:"Fredoka",sans-serif; font-weight:600; font-size:12px; color:var(--blue-ink);
+}
+.address-link{
+  color:var(--ink); font-weight:600; text-decoration:none;
+  display:inline-flex; align-items:center; gap:8px;
+}
+.address-link::before{content:"📍"; font-size:15px;}
+.address-link:hover{color:var(--blue-ink); text-decoration:underline;}
+.info-card .address-link::before{content:none;}
+.map-embed{border-radius:var(--radius-lg); overflow:hidden; border:1px solid var(--line); margin-bottom:20px;}
+.map-embed iframe{width:100%; height:340px; border:0; display:block;}
+
+/* ---------- footer ---------- */
+.site-footer{padding:44px 0 30px; margin-top:20px;}
+.site-footer .cols{display:grid; grid-template-columns:2fr 1fr 1fr; gap:24px; margin-bottom:24px;}
+.site-footer h4{
+  font-size:13px; text-transform:uppercase; letter-spacing:0.06em;
+  color:color-mix(in srgb, var(--deep-text) 75%, transparent); margin:0 0 10px;
+}
+.site-footer p, .site-footer a{
+  font-size:13.5px; color:color-mix(in srgb, var(--deep-text) 88%, transparent);
+  display:block; margin-bottom:6px;
+}
+.site-footer a:hover{color:var(--deep-text);}
+.site-footer .brandmark{margin-bottom:10px; color:var(--deep-text);}
+.site-footer .brandmark span{color:var(--azzurro);}
+.site-footer .bottom{
+  border-top:1px solid color-mix(in srgb, var(--deep-text) 22%, transparent);
+  padding-top:16px; font-size:12px; color:color-mix(in srgb, var(--deep-text) 70%, transparent);
+  display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+}
+
+/* ---------- responsive ---------- */
+@media (max-width:820px){
+  .main-nav{display:none;}
+  .hero-flex{flex-direction:column; text-align:center;}
+  .hero-logo-art{width:min(220px, 55vw); order:-1;}
+  .category-tiles{grid-template-columns:repeat(3,1fr); row-gap:28px;}
+  .dove-hero-panel{grid-template-columns:1fr;}
+  .dove-hero-panel .map-embed iframe{min-height:280px;}
+  .story-flex{flex-direction:column;}
+  .italy-map-wrap{flex-direction:column;}
+  .italy-map-svg{max-width:220px;}
+  .order-panel{flex-direction:column; padding:24px;}
+  .journey-flex{flex-direction:column;}
+  .today-card{position:static;}
+  .statement-grid{grid-template-columns:1fr 1fr; height:320px;}
+  .story-photo{max-width:280px;}
+  .journey{flex-wrap:wrap; row-gap:24px;}
+  .journey::before{display:none;}
+  .journey .stop{flex:1 1 30%;}
+  .info-grid{grid-template-columns:1fr 1fr;}
+  .address-block{flex-direction:column; align-items:flex-start; text-align:left;}
+  .hero-content .lede{margin-left:auto; margin-right:auto;}
+  .order-modes{grid-template-columns:1fr;}
+  .pizza-grid{grid-template-columns:repeat(2,1fr);}
+  .price-compare{grid-template-columns:1fr;}
+  .info-grid{grid-template-columns:1fr;}
+  .review-grid{grid-template-columns:1fr;}
+  .site-footer .cols{grid-template-columns:1fr; gap:18px;}
+  .tables-grid{grid-template-columns:repeat(3,1fr);}
+}
+@media (max-width:520px){
+  .category-tiles{grid-template-columns:repeat(2,1fr); gap:18px;}
+  .pizza-grid{grid-template-columns:1fr 1fr;}
+  .menu-item{grid-template-columns:1fr;}
+  .menu-item .prices{grid-column:1; grid-row:auto; justify-content:flex-start; margin-top:6px;}
+  .menu-item .prices .p-label{text-align:left;}
+  .tables-grid{grid-template-columns:repeat(2,1fr);}
+  .statement-grid{grid-template-columns:1fr; grid-template-rows:none; height:auto;}
+  .statement-photo.tall{grid-row:auto; aspect-ratio:4/3;}
+  .statement-photo{aspect-ratio:4/3;}
+  .stat-band, .review-hero{text-align:center; justify-content:center; flex-direction:column; padding:36px 24px;}
+  .guarantee-top{flex-direction:column; text-align:center;}
+  .guarantee-more{width:100%;}
+  .info-grid{grid-template-columns:1fr;}
+  .review-ticker{margin-left:auto; margin-right:auto;}
+}
+
+@media (prefers-reduced-motion:no-preference){
+  html{scroll-behavior:smooth;}
+}
