@@ -1,0 +1,775 @@
+{
+ "valuta": "EUR",
+ "consegna": {
+  "supplemento": 2.0,
+  "nota": "sul totale del conto, non sui singoli piatti"
+ },
+ "integrale": {
+  "supplemento": 1.0
+ },
+ "categorie": [
+  {
+   "id": "classiche",
+   "categoria": "Le Classiche",
+   "piatti": [
+    {
+     "id": "classiche-marinara",
+     "nome": "Marinara",
+     "ingredienti": "Pomodoro, aglio, pomodorini, origano",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 7.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 18.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-margherita",
+     "nome": "Margherita",
+     "ingredienti": "Pomodoro, fior di latte, basilico",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 7.5
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 19.5
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-napoli",
+     "nome": "Napoli",
+     "ingredienti": "Pomodoro, fior di latte, acciughe, origano",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 8.5
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 24.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-prosciutto",
+     "nome": "Prosciutto",
+     "ingredienti": "Pomodoro, fior di latte, prosciutto cotto",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 9.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 25.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-wurstel",
+     "nome": "Wurstel",
+     "ingredienti": "Pomodoro, fior di latte, wurstel",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 8.5
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 25.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-diavola",
+     "nome": "Diavola",
+     "ingredienti": "Pomodoro, fior di latte, salamino piccante",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 10.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 27.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-romana",
+     "nome": "Romana",
+     "ingredienti": "Pomodoro, fior di latte, acciughe, capperi, olive",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 10.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 27.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-prosciutto-e-funghi",
+     "nome": "Prosciutto e Funghi",
+     "ingredienti": "Pomodoro, fior di latte, prosciutto e funghi",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 10.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 27.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-4-formaggi",
+     "nome": "4 Formaggi",
+     "ingredienti": "Pomodoro, fior di latte, formaggi",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 10.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 28.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-4-stagioni",
+     "nome": "4 Stagioni",
+     "ingredienti": "Pomodoro, fior di latte, funghi, olive, carciofi, prosciutto cotto",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 10.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 28.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-salame-e-patate",
+     "nome": "Salame e Patate",
+     "ingredienti": "Pomodoro, fior di latte, salame, patate",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 10.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 28.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-salsiccia-e-patate",
+     "nome": "Salsiccia e Patate",
+     "ingredienti": "Pomodoro, fior di latte, salsiccia, patate",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 10.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 28.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-wurstel-e-patate",
+     "nome": "Wurstel e Patate",
+     "ingredienti": "Pomodoro, fior di latte, wurstel, patate",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 10.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 28.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-parmigiana",
+     "nome": "Parmigiana",
+     "ingredienti": "Pomodoro, fior di latte, melanzane, parmigiano, basilico",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 10.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 28.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-vegetariana",
+     "nome": "Vegetariana",
+     "ingredienti": "Pomodoro, fior di latte, zucchine, melanzane, peperoni grigliati",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 10.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 28.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-speck-e-gorgonzola",
+     "nome": "Speck e Gorgonzola",
+     "ingredienti": "Pomodoro, fior di latte, speck, gorgonzola",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 10.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 28.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-vesuvio",
+     "nome": "Vesuvio",
+     "ingredienti": "Pomodoro, fior di latte, melanzane, salsiccia",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 10.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 28.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-pugliese",
+     "nome": "Pugliese",
+     "ingredienti": "Pomodoro, fior di latte, tonno, cipolla",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 10.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 28.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-bufalina",
+     "nome": "Bufalina",
+     "ingredienti": "Pomodoro, fior di latte, bufala cruda, basilico",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 10.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 28.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-fra",
+     "nome": "Frà",
+     "ingredienti": "Pomodoro, fior di latte, salame piccante, olive, funghi freschi",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 11.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 30.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-capricciosa",
+     "nome": "Capricciosa",
+     "ingredienti": "Prosciutto cotto, olive, funghi freschi, peperoni, carciofi",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 11.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 30.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-cetarina",
+     "nome": "Cetarina",
+     "ingredienti": "Alici marinate, pomodorini, olive, rucola",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 12.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 30.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-pere-zola-e-noci",
+     "nome": "Pere, Zola e Noci",
+     "ingredienti": "Fior di latte, pere, zola, noci",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 12.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 30.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-gena",
+     "nome": "Gena",
+     "ingredienti": "Pomodoro, fior di latte, pesto, bufala, pomodorini",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 12.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 30.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-friarielli-e-salsiccia",
+     "nome": "Friarielli e Salsiccia",
+     "ingredienti": "Fior di latte, salsiccia a punta di coltello, friarielli",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 12.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 30.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-braccio-di-ferro",
+     "nome": "Braccio di Ferro",
+     "ingredienti": "Fior di latte, spinaci, ricotta, salsiccia, grana",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 12.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 30.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-crudo-e-bufala",
+     "nome": "Crudo e Bufala",
+     "ingredienti": "Pomodoro, fior di latte, prosciutto crudo, bufala",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 12.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 30.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-norcia",
+     "nome": "Norcia",
+     "ingredienti": "Pomodoro, fior di latte, prosciutto crudo, funghi porcini",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 12.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 30.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    },
+    {
+     "id": "classiche-4-salumi",
+     "nome": "4 Salumi",
+     "ingredienti": "Pomodoro, fior di latte, salsiccia, wurstel, cotto e salame piccante",
+     "prezzi": [
+      {
+       "formato": "Classica",
+       "prezzo": 12.0
+      },
+      {
+       "formato": "Ruota",
+       "prezzo": 30.0
+      }
+     ],
+     "categoria": "classiche",
+     "aggiunta": false
+    }
+   ]
+  },
+  {
+   "id": "calzoni",
+   "categoria": "I Calzoni",
+   "piatti": [
+    {
+     "id": "calzoni-liscio",
+     "nome": "Liscio",
+     "ingredienti": "Pomodoro, mozzarella, cotto",
+     "prezzi": [
+      {
+       "formato": "unico",
+       "prezzo": 8.5
+      }
+     ],
+     "categoria": "calzoni",
+     "aggiunta": false
+    },
+    {
+     "id": "calzoni-napoletano",
+     "nome": "Napoletano",
+     "ingredienti": "Pomodoro, mozzarella, ricotta, salame piccante, grana, pepe",
+     "prezzi": [
+      {
+       "formato": "unico",
+       "prezzo": 11.0
+      }
+     ],
+     "categoria": "calzoni",
+     "aggiunta": false
+    },
+    {
+     "id": "calzoni-farcito",
+     "nome": "Farcito",
+     "ingredienti": "Pomodoro, fior di latte, cotto, salame piccante, funghi, olive nere, carciofi",
+     "prezzi": [
+      {
+       "formato": "unico",
+       "prezzo": 10.0
+      }
+     ],
+     "categoria": "calzoni",
+     "aggiunta": false
+    }
+   ]
+  },
+  {
+   "id": "paste",
+   "categoria": "Le Paste",
+   "piatti": [
+    {
+     "id": "paste-pasta-bella-donna",
+     "nome": "Pasta Bella Donna",
+     "ingredienti": "Pomodoro, acciughe, olive e capperi",
+     "prezzi": [
+      {
+       "formato": "unico",
+       "prezzo": 9.0
+      }
+     ],
+     "categoria": "paste",
+     "aggiunta": false
+    },
+    {
+     "id": "paste-pasta-e-patate",
+     "nome": "Pasta e Patate",
+     "ingredienti": "Patate, provola e pancetta",
+     "prezzi": [
+      {
+       "formato": "unico",
+       "prezzo": 9.0
+      }
+     ],
+     "categoria": "paste",
+     "aggiunta": false
+    },
+    {
+     "id": "paste-pasta-nerano",
+     "nome": "Pasta Nerano",
+     "ingredienti": "Zucchine, pesto, mozzarella",
+     "prezzi": [
+      {
+       "formato": "unico",
+       "prezzo": 9.0
+      }
+     ],
+     "categoria": "paste",
+     "aggiunta": false
+    },
+    {
+     "id": "paste-gnocchi-alla-sorrentina",
+     "nome": "Gnocchi alla Sorrentina",
+     "ingredienti": "Pomodoro, basilico e mozzarella",
+     "prezzi": [
+      {
+       "formato": "unico",
+       "prezzo": 9.5
+      }
+     ],
+     "categoria": "paste",
+     "aggiunta": false
+    }
+   ]
+  },
+  {
+   "id": "panuozzi",
+   "categoria": "I Panuozzi",
+   "piatti": [
+    {
+     "id": "panuozzi-friarielli-e-salsiccia",
+     "nome": "Friarielli e Salsiccia",
+     "ingredienti": "Friarielli e salsiccia",
+     "prezzi": [
+      {
+       "formato": "unico",
+       "prezzo": 7.5
+      }
+     ],
+     "categoria": "panuozzi",
+     "aggiunta": false
+    },
+    {
+     "id": "panuozzi-crudo-e-bufala",
+     "nome": "Crudo e Bufala",
+     "ingredienti": "Crudo e bufala",
+     "prezzi": [
+      {
+       "formato": "unico",
+       "prezzo": 8.0
+      }
+     ],
+     "categoria": "panuozzi",
+     "aggiunta": false
+    },
+    {
+     "id": "panuozzi-vegetariano",
+     "nome": "Vegetariano",
+     "ingredienti": "Zucchine, melanzane e peperoni",
+     "prezzi": [
+      {
+       "formato": "unico",
+       "prezzo": 8.0
+      }
+     ],
+     "categoria": "panuozzi",
+     "aggiunta": false
+    },
+    {
+     "id": "panuozzi-diavola",
+     "nome": "Diavola",
+     "ingredienti": "Mozzarella e salame piccante",
+     "prezzi": [
+      {
+       "formato": "unico",
+       "prezzo": 8.0
+      }
+     ],
+     "categoria": "panuozzi",
+     "aggiunta": false
+    }
+   ]
+  },
+  {
+   "id": "combo",
+   "categoria": "Menù Combo",
+   "piatti": [
+    {
+     "id": "combo-menu-pizza",
+     "nome": "Menù Pizza",
+     "ingredienti": "Aggiungi bibita e patatine fritte a qualsiasi pizza",
+     "prezzi": [
+      {
+       "formato": "unico",
+       "prezzo": 2.5
+      }
+     ],
+     "categoria": "combo",
+     "aggiunta": true
+    },
+    {
+     "id": "combo-menu-panuozzo",
+     "nome": "Menù Panuozzo",
+     "ingredienti": "Panuozzo a scelta + bibita",
+     "prezzi": [
+      {
+       "formato": "unico",
+       "prezzo": 9.5
+      }
+     ],
+     "categoria": "combo",
+     "aggiunta": true
+    },
+    {
+     "id": "combo-menu-pasta",
+     "nome": "Menù Pasta",
+     "ingredienti": "Pasta a scelta + bibita in lattina",
+     "prezzi": [
+      {
+       "formato": "unico",
+       "prezzo": 10.0
+      }
+     ],
+     "categoria": "combo",
+     "aggiunta": true
+    },
+    {
+     "id": "combo-menu-fritto",
+     "nome": "Menù Fritto",
+     "ingredienti": "4 pezzi a scelta dalla vetrina",
+     "prezzi": [
+      {
+       "formato": "unico",
+       "prezzo": 6.0
+      }
+     ],
+     "categoria": "combo",
+     "aggiunta": true
+    }
+   ]
+  },
+  {
+   "id": "dolci",
+   "categoria": "Dolci",
+   "piatti": [
+    {
+     "id": "dolci-torta-della-nonna",
+     "nome": "Torta della Nonna",
+     "ingredienti": "",
+     "prezzi": [
+      {
+       "formato": "unico",
+       "prezzo": 3.5
+      }
+     ],
+     "categoria": "dolci",
+     "aggiunta": false
+    },
+    {
+     "id": "dolci-tiramisu",
+     "nome": "Tiramisù",
+     "ingredienti": "",
+     "prezzi": [
+      {
+       "formato": "unico",
+       "prezzo": 3.5
+      }
+     ],
+     "categoria": "dolci",
+     "aggiunta": false
+    },
+    {
+     "id": "dolci-calzone-alla-nutella",
+     "nome": "Calzone alla Nutella",
+     "ingredienti": "",
+     "prezzi": [
+      {
+       "formato": "unico",
+       "prezzo": 4.0
+      }
+     ],
+     "categoria": "dolci",
+     "aggiunta": false
+    }
+   ]
+  }
+ ]
+}

@@ -944,3 +944,114 @@ section{padding:44px 0;}
 @media (prefers-reduced-motion:no-preference){
   html{scroll-behavior:smooth;}
 }
+
+/* ---------- carrello e ordine ---------- */
+.aggiungi-riga{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+.btn-aggiungi{
+  font:inherit; font-size:13px; font-weight:700; cursor:pointer;
+  color:var(--blue-ink); background:color-mix(in srgb, var(--azzurro) 30%, transparent);
+  border:1px solid color-mix(in srgb, var(--blue) 26%, transparent);
+  border-radius:999px; padding:7px 14px;
+  transition:background .16s ease, transform .16s ease;
+}
+.btn-aggiungi:hover{background:color-mix(in srgb, var(--azzurro) 55%, transparent);}
+.btn-aggiungi.fatto{background:var(--green); color:#fff; transform:scale(1.06);}
+
+.carrello-fab{
+  position:fixed; right:18px; bottom:18px; z-index:60;
+  display:inline-flex; align-items:center; gap:9px;
+  font:inherit; font-weight:700; font-size:14.5px; cursor:pointer;
+  color:#fff; background:var(--blue); border:none;
+  border-radius:999px; padding:13px 20px;
+  box-shadow:0 12px 28px rgba(0,0,0,0.26);
+  transition:transform .18s ease, background .18s ease;
+}
+.carrello-fab:hover{transform:translateY(-2px);}
+.carrello-fab.ha-roba{background:var(--red);}
+.carrello-fab .fab-tot{
+  background:rgba(255,255,255,0.22); border-radius:999px; padding:3px 9px; font-size:13px;
+}
+
+.carrello-pannello{
+  position:fixed; z-index:70; top:0; right:0; bottom:0; width:min(430px, 100vw);
+  overflow-y:auto; -webkit-overflow-scrolling:touch;
+  background:var(--cream); border-left:1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  box-shadow:-18px 0 40px rgba(0,0,0,0.2);
+  padding:20px 22px 40px;
+  animation:carrello-entra .22s ease;
+}
+@keyframes carrello-entra{from{transform:translateX(24px); opacity:0;} to{transform:none; opacity:1;}}
+body.carrello-aperto{overflow:hidden;}
+
+.carrello-testa{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;}
+.carrello-testa h2{margin:0; font-size:22px;}
+.carrello-chiudi{
+  font:inherit; font-size:18px; line-height:1; cursor:pointer;
+  background:transparent; border:1px solid color-mix(in srgb, var(--ink) 22%, transparent);
+  border-radius:10px; width:36px; height:36px;
+}
+.carrello-avviso{
+  font-size:13.5px; border-radius:12px; padding:11px 13px; margin:0 0 14px;
+  background:color-mix(in srgb, var(--azzurro) 30%, transparent); color:var(--blue-ink);
+}
+.carrello-avviso.ferie{background:color-mix(in srgb, var(--red) 16%, transparent); color:var(--red-ink, #8a2020);}
+.carrello-vuoto{font-size:14.5px; color:var(--ink-soft);}
+
+.carrello-righe{list-style:none; margin:0 0 16px; padding:0;}
+.carrello-riga{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:11px 0; border-bottom:1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+}
+.riga-nome{display:block; font-weight:700; font-size:15px;}
+.riga-formato{
+  display:inline-block; font-size:11.5px; font-weight:700; text-transform:lowercase;
+  background:color-mix(in srgb, var(--azzurro) 34%, transparent); color:var(--blue-ink);
+  border-radius:999px; padding:2px 8px; margin:3px 5px 0 0;
+}
+.riga-prezzo{display:block; font-size:13px; color:var(--ink-soft); margin-top:3px;}
+.riga-qta{display:flex; align-items:center; gap:8px; flex:none;}
+.riga-qta button{
+  font:inherit; font-size:16px; line-height:1; cursor:pointer; width:30px; height:30px;
+  background:#fff; border:1px solid color-mix(in srgb, var(--ink) 20%, transparent); border-radius:8px;
+}
+.riga-qta button:hover{border-color:var(--blue); color:var(--blue);}
+
+.carrello-modalita{display:flex; flex-direction:column; gap:8px; margin-bottom:14px;}
+.carrello-modalita label,.carrello-pagamento label{
+  display:flex; align-items:center; gap:9px; font-size:14.5px; cursor:pointer;
+}
+.carrello-totali{
+  background:#fff; border-radius:14px; padding:13px 15px; margin-bottom:16px;
+  border:1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+}
+.tot-riga{display:flex; justify-content:space-between; font-size:14px; padding:3px 0;}
+.tot-riga.tot-finale{
+  font-weight:800; font-size:17px; padding-top:9px; margin-top:6px;
+  border-top:1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+.carrello-form label{display:block; font-size:13.5px; font-weight:600; margin-bottom:11px;}
+.carrello-form input[type=text],
+.carrello-form input[type=tel],
+.carrello-form textarea{
+  display:block; width:100%; margin-top:5px; font:inherit; font-size:15px; font-weight:400;
+  padding:10px 12px; border-radius:10px;
+  border:1px solid color-mix(in srgb, var(--ink) 22%, transparent); background:#fff;
+}
+.carrello-form input:focus,.carrello-form textarea:focus{outline:2px solid var(--blue); outline-offset:1px;}
+.carrello-pagamento{
+  border:1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+  border-radius:12px; padding:11px 13px; margin:4px 0 12px;
+}
+.carrello-pagamento legend{font-size:13px; font-weight:700; padding:0 5px;}
+.carrello-pagamento .presto{font-size:12px; color:var(--ink-soft); font-weight:600;}
+.carrello-pagamento input:disabled + *,
+.carrello-pagamento label:has(input:disabled){opacity:.6;}
+.carrello-allergeni{font-size:12.5px; color:var(--ink-soft); margin:0 0 12px;}
+.btn-invia[disabled]{opacity:.55; cursor:not-allowed;}
+.carrello-nota{font-size:12px; color:var(--ink-soft); margin:10px 0 0; text-align:center;}
+
+@media (max-width:520px){
+  .carrello-pannello{width:100vw; border-left:none;}
+  .carrello-fab{right:12px; bottom:12px; padding:12px 17px;}
+}
