@@ -9,6 +9,35 @@
     window.addEventListener("scroll", onScroll, { passive: true });
   }
 
+  // Menu di navigazione su telefono: apre/chiude il pannello a tendina
+  var siteHeader = document.querySelector(".site-header");
+  var navToggle = document.querySelector(".nav-toggle");
+  if (siteHeader && navToggle) {
+    var setNav = function (open) {
+      siteHeader.setAttribute("data-nav-open", open ? "true" : "false");
+      navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+    };
+    setNav(false);
+    navToggle.addEventListener("click", function () {
+      setNav(siteHeader.getAttribute("data-nav-open") !== "true");
+    });
+    // toccando una voce il pannello si chiude
+    siteHeader.querySelectorAll(".main-nav a").forEach(function (link) {
+      link.addEventListener("click", function () { setNav(false); });
+    });
+    // Esc chiude e riporta il fuoco sul pulsante
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && siteHeader.getAttribute("data-nav-open") === "true") {
+        setNav(false);
+        navToggle.focus();
+      }
+    });
+    // tornando a schermo largo lo stato si azzera
+    window.addEventListener("resize", function () {
+      if (window.innerWidth > 820) setNav(false);
+    });
+  }
+
   // Mappa storia: legenda e pin si evidenziano a vicenda al passaggio del mouse
   document.querySelectorAll(".italy-map-legend .leg").forEach(function (leg) {
     var pin = document.querySelector('.map-pin[data-stop="' + leg.dataset.stop + '"]');
