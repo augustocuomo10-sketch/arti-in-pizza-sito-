@@ -1,0 +1,15 @@
+name = "arti-in-pizza-ordini"
+main = "src/index.js"
+compatibility_date = "2026-08-01"
+
+# Archivio ordini: conserva l'importo verificato dal server, che serve
+# a confrontarlo con quanto SumUp dichiara di aver incassato.
+# Crealo con:  wrangler kv namespace create ORDINI
+[[kv_namespaces]]
+binding = "ORDINI"
+id = "DA_COMPILARE_DOPO_wrangler_kv_namespace_create"
+
+# I segreti NON vanno qui dentro. Si impostano con:
+#   wrangler secret put SUMUP_API_KEY
+#   wrangler secret put SUMUP_MERCHANT_CODE
+# Restano nell'infrastruttura Cloudflare e non compaiono mai nel repository.
