@@ -983,6 +983,9 @@ section{padding:44px 0;}
 @keyframes carrello-entra{from{transform:translateX(24px); opacity:0;} to{transform:none; opacity:1;}}
 body.carrello-aperto{overflow:hidden;}
 
+/* l'attributo hidden deve vincere sulle regole display:flex/block qui sotto */
+.carrello-pannello [hidden]{display:none !important;}
+
 .carrello-testa{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;}
 .carrello-testa h2{margin:0; font-size:22px;}
 .carrello-chiudi{
