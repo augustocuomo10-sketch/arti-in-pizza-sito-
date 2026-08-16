@@ -432,8 +432,11 @@
       if (q.length < 4) { chiudi(); return; }
       // si aspetta la pausa di digitazione: evita una richiesta per ogni tasto
       attesa = setTimeout(function () {
+        // niente lang=it: Photon accetta solo default/de/en/fr e altrimenti
+        // risponde 400. Senza il parametro restituisce i nomi originali,
+        // che per gli indirizzi italiani e' esattamente cio' che serve.
         var url = "https://photon.komoot.io/api/?q=" + encodeURIComponent(q) +
-          "&lat=45.8044&lon=9.0929&limit=5&lang=it";
+          "&lat=45.8044&lon=9.0929&limit=5";
         fetch(url)
           .then(function (r) { return r.json(); })
           .then(function (d) {
