@@ -294,6 +294,7 @@
     aggiornaTotale();
 
     agganciaSuggerimenti(campoInd.querySelector("input"));
+    agganciaVerificheCampi();
 
     pannello.querySelector(".carrello-form").addEventListener("submit", function (e) {
       e.preventDefault();
@@ -334,8 +335,15 @@
       modalita: f.get("modalita"),
       pagamento: f.get("pagamento")
     };
-    if (!d.nome || !d.telefono) {
-      mostraErrore("Servono nome e telefono: senza quelli non possiamo confermarti l'ordine.");
+    var problemi = [
+      [form.querySelector('[name="nome"]'), erroreNome(d.nome)],
+      [form.querySelector('[name="telefono"]'), erroreTelefono(d.telefono)],
+      [form.querySelector('[name="orario"]'), erroreOrario(d.orario)]
+    ].filter(function (x) { return x[1]; });
+    if (problemi.length) {
+      problemi.forEach(function (x) { mostraErroreCampo(x[0], x[1]); });
+      problemi[0][0].focus();
+      mostraErrore("Controlla i campi segnalati qui sopra.");
       return;
     }
     if (d.modalita === "domicilio" && !d.indirizzo) {
@@ -377,6 +385,94 @@
       });
   }
 
+
+
+  // ------------------------------------------------------ verifiche campi
+  // Controlli immediati mentre si compila. Il server rifa' comunque tutto:
+  // questi servono a far correggere l'errore subito, non a fidarsi.
+
+  function normalizzaTelefono(v) {
+    return String(v).replace(/[\s.\-()\/]/g, "").replace(/^\+39/, "").replace(/^0039/, "");
+  }
+
+  function erroreTelefono(v) {
+    var t = normalizzaTelefono(v);
+    if (!t) return "Serve il telefono: senza non possiamo confermarti l'ordine.";
+    if (/[^0-9]/.test(t)) return "Il numero può contenere solo cifre (e prefisso +39).";
+    if (t.length < 8 || t.length > 15) return "Il numero non sembra completo.";
+    if (!/^[03]/.test(t)) return "Un numero italiano inizia con 3 (cellulare) o 0 (fisso).";
+    return null;
+  }
+
+  function erroreOrario(v) {
+    var t = String(v).trim();
+    if (!t) return null;                                   // vuoto = prima possibile
+    if (/^(prima possibile|appena pronto|subito|asap)$/i.test(t)) return null;
+    var m = t.match(/^([01]?\d|2[0-3])[:.]([0-5]\d)$/);
+    if (!m) return "Scrivi un orario tipo 20:00, oppure «prima possibile».";
+    var minuti = parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+    var g = new Date().getDay();
+    var fasce = [CFG.orari.pranzo, CFG.orari.cena];
+    for (var i = 0; i < fasce.length; i++) {
+      var f = fasce[i];
+      if (f.giorni.indexOf(g) !== -1 && minuti >= minuti2(f.apre) && minuti <= minuti2(f.chiude)) return null;
+    }
+    return "A quell'ora siamo chiusi. Pranzo 11:30–15:00 (lun–sab), cena 18:30–22:00.";
+  }
+
+  function minuti2(hhmm) { return minuti(hhmm); }
+
+  function erroreNome(v) {
+    var t = String(v).trim();
+    if (t.length < 2) return "Serve un nome per confermare l'ordine.";
+    if (t.length > 80) return "Nome troppo lungo.";
+    return null;
+  }
+
+  function mostraErroreCampo(input, testo) {
+    var etichetta = input.closest("label");
+    var vecchio = etichetta.querySelector(".campo-errore");
+    if (vecchio) vecchio.remove();
+    input.setAttribute("aria-invalid", testo ? "true" : "false");
+    if (!testo) return;
+    var s = document.createElement("span");
+    s.className = "campo-errore";
+    s.textContent = testo;
+    etichetta.appendChild(s);
+  }
+
+  function agganciaVerificheCampi() {
+    var coppie = [
+      ["nome", erroreNome],
+      ["telefono", erroreTelefono],
+      ["orario", erroreOrario]
+    ];
+    coppie.forEach(function (c) {
+      var el = pannello.querySelector('[name="' + c[0] + '"]');
+      if (!el) return;
+      el.addEventListener("blur", function () { mostraErroreCampo(el, c[1](el.value)); });
+      el.addEventListener("input", function () {
+        if (el.getAttribute("aria-invalid") === "true") mostraErroreCampo(el, c[1](el.value));
+      });
+    });
+
+    // contatore per le note, il cui limite lato server e' 400
+    var note = pannello.querySelector('[name="note"]');
+    if (note) {
+      var cont = document.createElement("span");
+      cont.className = "campo-contatore";
+      note.closest("label").appendChild(cont);
+      var agg = function () {
+        var n = note.value.length;
+        cont.textContent = n + "/400";
+        cont.classList.toggle("al-limite", n > 400);
+        if (n > 400) mostraErroreCampo(note, "Le note superano i 400 caratteri: accorciale.");
+        else mostraErroreCampo(note, null);
+      };
+      note.addEventListener("input", agg);
+      agg();
+    }
+  }
 
   // ------------------------------------------------- suggerimenti indirizzo
   // Completamento tipo navigatore: il cliente sceglie da un elenco invece di

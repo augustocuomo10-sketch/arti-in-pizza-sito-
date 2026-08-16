@@ -518,8 +518,34 @@ function verificaRighe(righe) {
 
 const arrotonda = (n) => Math.round(n * 100) / 100;
 
+
+// Orario richiesto dal cliente: vuoto o "prima possibile" vanno bene,
+// altrimenti deve essere un orario reale e dentro una fascia di servizio.
+// Senza questo controllo si potrebbe chiedere la consegna alle 3 di notte.
+function verificaOrarioRichiesto(testo, adesso) {
+  const t = String(testo || "").trim();
+  if (!t) return "";
+  if (/^(prima possibile|appena pronto|subito|asap)$/i.test(t)) return t;
+
+  const m = t.match(/^([01]?\d|2[0-3])[:.]([0-5]\d)$/);
+  if (!m) {
+    errore("orario_non_valido",
+      "L'orario richiesto non e' leggibile: scrivi un orario tipo 20:00, oppure «prima possibile».");
+  }
+  const richiesti = parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+  const giorno = oraItaliana(adesso).giorno;
+  const fasce = [REGOLE.orari.pranzo, REGOLE.orari.cena];
+  const dentro = fasce.some(f =>
+    f.giorni.includes(giorno) && richiesti >= inMinuti(f.apre) && richiesti <= inMinuti(f.chiude));
+  if (!dentro) {
+    errore("orario_fuori_servizio",
+      `Alle ${t} siamo chiusi. Pranzo 11:30-15:00 (lun-sab), cena 18:30-22:00 (tutti i giorni).`);
+  }
+  return t;
+}
+
 // --------------------------------------------------------------- cliente
-function verificaCliente(c) {
+function verificaCliente(c, adesso) {
   if (!c || typeof c !== "object") errore("cliente_mancante", "Dati del cliente mancanti.");
 
   const nome = pulisci(c.nome, 80, "nome");
@@ -539,7 +565,7 @@ function verificaCliente(c) {
 
   return {
     nome, telefono, modalita, indirizzo,
-    orario: pulisci(c.orario || "", 40, "orario"),
+    orario: verificaOrarioRichiesto(pulisci(c.orario || "", 40, "orario"), adesso),
     note: pulisci(c.note || "", 400, "note")
   };
 }
@@ -564,7 +590,7 @@ function calcolaTotale(righe, modalita) {
 // Verifica completa. Ritorna l'ordine ricalcolato e attendibile.
 function verificaOrdine(corpo, adesso) {
   verificaApertura(adesso);
-  const cliente = verificaCliente(corpo && corpo.cliente);
+  const cliente = verificaCliente(corpo && corpo.cliente, adesso);
   const righe = verificaRighe(corpo && corpo.righe);
   const totali = calcolaTotale(righe, cliente.modalita);
   return { cliente, righe, totali };
