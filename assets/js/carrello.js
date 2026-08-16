@@ -16,7 +16,7 @@
     // Es. "https://arti-in-pizza-ordini.<sottodominio>.workers.dev"
     // Finche' e' vuoto, il pagamento online resta disattivato e si ordina
     // solo con pagamento alla consegna: nessun rischio di incassi a vuoto.
-    apiPagamenti: "",
+    apiPagamenti: "https://bitter-firefly-4508.augusto-cuomo10.workers.dev",
     // percorso relativo: funziona sia da /menu.html sia da /en/menu.html
     pdfAllergeni: location.pathname.indexOf("/en/") === 0 ? "../assets/doc/allergeni.pdf" : "assets/doc/allergeni.pdf",
     consegnaSupplemento: 2.0,

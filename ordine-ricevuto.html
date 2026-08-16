@@ -40,7 +40,7 @@
 // Lo stato del pagamento non si deduce dal fatto di essere atterrati qui:
 // si chiede al server, che a sua volta lo chiede a SumUp.
 (function () {
-  var API = ""; // stesso valore di CFG.apiPagamenti in assets/js/carrello.js
+  var API = "https://bitter-firefly-4508.augusto-cuomo10.workers.dev"; // stesso valore di CFG.apiPagamenti in assets/js/carrello.js
   var box = document.getElementById("esito");
   var rif = new URLSearchParams(location.search).get("ref") || "";
 
