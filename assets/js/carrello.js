@@ -22,8 +22,10 @@
     consegnaSupplemento: 2.0,
     integraleSupplemento: 1.0,
     ordineMinimoDomicilio: 0,
-    // Chiusura per ferie: riapertura lunedi' 18 agosto 2026
-    chiusuraFino: "2026-08-18",
+    // Chiusura straordinaria: data ISO fino a cui non si accettano ordini.
+    // Vuota = nessuna chiusura. Deve combaciare con la variabile
+    // CHIUSURA_FINO del Worker, che e' quella che decide davvero.
+    chiusuraFino: "",
     orari: {
       pranzo: { apre: "11:30", chiude: "15:00", giorni: [1, 2, 3, 4, 5, 6] },
       cena: { apre: "18:30", chiude: "22:00", giorni: [0, 1, 2, 3, 4, 5, 6] }
@@ -41,8 +43,8 @@
 
   function statoApertura(ora) {
     var d = ora || new Date();
-    var riapertura = new Date(CFG.chiusuraFino + "T00:00:00");
-    if (d < riapertura) {
+    var riapertura = CFG.chiusuraFino ? new Date(CFG.chiusuraFino + "T00:00:00") : null;
+    if (riapertura && d < riapertura) {
       return {
         aperto: false,
         chiusuraFerie: true,

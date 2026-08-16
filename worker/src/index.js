@@ -116,7 +116,7 @@ export default {
         catch { return json({ errore: "Richiesta non leggibile." }, 400, origine); }
 
         // *** qui avviene la verifica: prezzi, quantita', orari, dati cliente ***
-        const ordine = verificaOrdine(corpo, new Date());
+        const ordine = verificaOrdine(corpo, new Date(), env.CHIUSURA_FINO);
 
         // Zona di consegna: solo per il domicilio, e solo dopo che il resto
         // e' risultato valido (evita chiamate esterne su ordini gia' da scartare).

@@ -49,11 +49,16 @@ const inMinuti = (hhmm) => {
   return parseInt(h, 10) * 60 + parseInt(m, 10);
 };
 
-export function verificaApertura(adesso) {
+// chiusuraFino: data ISO (AAAA-MM-GG) fino a cui il locale resta chiuso.
+// Arriva dalla variabile CHIUSURA_FINO del pannello Cloudflare: si cambia
+// da li' senza ripubblicare il codice. Vuota o assente = nessuna chiusura.
+export function verificaApertura(adesso, chiusuraFino) {
   const o = oraItaliana(adesso);
-  if (o.data < REGOLE.chiusuraFino) {
+  const fino = chiusuraFino === undefined ? REGOLE.chiusuraFino : chiusuraFino;
+  if (fino && o.data < fino) {
     errore("chiuso_ferie",
-      "Siamo chiusi per ferie fino al 17 agosto. Riapriamo lunedì 18: l'ordine non può essere accettato adesso.");
+      "Siamo chiusi in questo periodo: l'ordine non può essere accettato adesso. " +
+      "Chiamaci allo 031 300809 per sapere quando riapriamo.");
   }
   const fasce = [REGOLE.orari.pranzo, REGOLE.orari.cena];
   const aperto = fasce.some(f =>
@@ -184,8 +189,8 @@ export function calcolaTotale(righe, modalita) {
 }
 
 // Verifica completa. Ritorna l'ordine ricalcolato e attendibile.
-export function verificaOrdine(corpo, adesso) {
-  verificaApertura(adesso);
+export function verificaOrdine(corpo, adesso, chiusuraFino) {
+  verificaApertura(adesso, chiusuraFino);
   const cliente = verificaCliente(corpo && corpo.cliente, adesso);
   const righe = verificaRighe(corpo && corpo.righe);
   const totali = calcolaTotale(righe, cliente.modalita);
