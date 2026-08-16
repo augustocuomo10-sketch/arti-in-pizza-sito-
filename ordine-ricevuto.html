@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ordine ricevuto — Arti in Pizza</title>
+<meta name="description" content="Conferma dell'ordine inviato ad Arti in Pizza, pizzeria a Como.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+<a href="#main" class="visually-hidden">Vai al contenuto</a>
+
+<header class="site-header texture-band">
+  <div class="wrap bar">
+    <a class="brandmark" href="index.html"><img class="brand-logo" src="assets/img/logo.png" alt="Arti in Pizza, dal 1997"></a>
+    <div class="header-actions">
+      <a class="btn btn-order" href="menu.html">Torna al menù</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" style="padding-bottom:20px;">
+    <div class="wrap">
+      <div id="esito" class="esito-ordine" aria-live="polite">
+        <p class="lede">Stiamo verificando il pagamento…</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer texture-band">
+  <div class="wrap">
+    <div class="bottom"><span>© 2026 Arti in Pizza di Cuomo Vincenzo — 031 300809</span></div>
+  </div>
+</footer>
+
+<script>
+// Lo stato del pagamento non si deduce dal fatto di essere atterrati qui:
+// si chiede al server, che a sua volta lo chiede a SumUp.
+(function () {
+  var API = ""; // stesso valore di CFG.apiPagamenti in assets/js/carrello.js
+  var box = document.getElementById("esito");
+  var rif = new URLSearchParams(location.search).get("ref") || "";
+
+  function mostra(titolo, testo, classe) {
+    box.className = "esito-ordine " + (classe || "");
+    box.innerHTML = "<h1>" + titolo + "</h1><p class='lede'>" + testo + "</p>" +
+      "<div class='btn-row'><a class='btn btn-primary' href='menu.html'>Torna al menù</a>" +
+      "<a class='btn btn-outline' href='tel:031300809'>Chiamaci: 031 300809</a></div>";
+  }
+
+  if (!rif) {
+    mostra("Ordine non identificato",
+      "Non troviamo il riferimento dell'ordine. Se hai pagato, chiamaci: controlliamo subito.", "attenzione");
+    return;
+  }
+  if (!API) {
+    mostra("Ordine registrato",
+      "Riferimento <strong>" + rif + "</strong>. Ti confermiamo noi tempi e disponibilità.", "");
+    return;
+  }
+
+  fetch(API + "/stato?ref=" + encodeURIComponent(rif))
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d.pagato) {
+        mostra("Pagamento riuscito",
+          "Grazie! Abbiamo ricevuto il tuo ordine <strong>" + rif + "</strong> per " +
+          String(d.totale).replace(".", ",") + " €. Ti chiamiamo noi per confermare i tempi.", "riuscito");
+      } else if (d.stato === "importo_discordante") {
+        mostra("Verifica in corso",
+          "Il pagamento risulta eseguito ma l'importo non corrisponde al nostro conteggio. " +
+          "Non addebitiamo nulla finché non abbiamo controllato: chiamaci allo 031 300809.", "attenzione");
+      } else {
+        mostra("Pagamento non ancora confermato",
+          "Non risulta ancora completato. Se pensi di aver pagato, chiamaci con il riferimento <strong>" +
+          rif + "</strong>.", "attenzione");
+      }
+    })
+    .catch(function () {
+      mostra("Non riusciamo a verificare ora",
+        "Riferimento <strong>" + rif + "</strong>. Chiamaci allo 031 300809 e controlliamo insieme.", "attenzione");
+    });
+})();
+</script>
+</body>
+</html>
