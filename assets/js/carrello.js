@@ -293,6 +293,8 @@
     radios.forEach(function (r) { r.addEventListener("change", aggiornaTotale); });
     aggiornaTotale();
 
+    agganciaSuggerimenti(campoInd.querySelector("input"));
+
     pannello.querySelector(".carrello-form").addEventListener("submit", function (e) {
       e.preventDefault();
       inviaOrdine(e.target);
@@ -373,6 +375,88 @@
         btn.textContent = "Invia l'ordine su WhatsApp";
         mostraErrore(err.message);
       });
+  }
+
+
+  // ------------------------------------------------- suggerimenti indirizzo
+  // Completamento tipo navigatore: il cliente sceglie da un elenco invece di
+  // digitare a mano, cosi' l'indirizzo arriva al server in forma riconoscibile.
+  // Il server lo riverifica comunque: qui e' solo comodita', non un controllo.
+  function agganciaSuggerimenti(input) {
+    if (!input) return;
+    var elenco = document.createElement("ul");
+    elenco.className = "indirizzo-sugg";
+    elenco.setAttribute("role", "listbox");
+    elenco.hidden = true;
+    input.insertAdjacentElement("afterend", elenco);
+    input.setAttribute("autocomplete", "off");
+    input.setAttribute("role", "combobox");
+    input.setAttribute("aria-expanded", "false");
+    input.setAttribute("aria-autocomplete", "list");
+
+    var attesa = null, voci = [], scelto = -1;
+
+    function chiudi() {
+      elenco.hidden = true; elenco.innerHTML = ""; voci = []; scelto = -1;
+      input.setAttribute("aria-expanded", "false");
+    }
+
+    function etichetta(p) {
+      var parti = [];
+      if (p.street) parti.push(p.street + (p.housenumber ? " " + p.housenumber : ""));
+      else if (p.name) parti.push(p.name);
+      if (p.postcode || p.city) parti.push([p.postcode, p.city].filter(Boolean).join(" "));
+      return parti.join(", ");
+    }
+
+    function disegna() {
+      elenco.innerHTML = "";
+      voci.forEach(function (t, i) {
+        var li = document.createElement("li");
+        li.setAttribute("role", "option");
+        li.setAttribute("aria-selected", i === scelto ? "true" : "false");
+        li.className = i === scelto ? "attivo" : "";
+        li.textContent = t;
+        li.addEventListener("mousedown", function (e) {
+          e.preventDefault(); input.value = t; chiudi();
+        });
+        elenco.appendChild(li);
+      });
+      elenco.hidden = !voci.length;
+      input.setAttribute("aria-expanded", voci.length ? "true" : "false");
+    }
+
+    input.addEventListener("input", function () {
+      var q = input.value.trim();
+      clearTimeout(attesa);
+      if (q.length < 4) { chiudi(); return; }
+      // si aspetta la pausa di digitazione: evita una richiesta per ogni tasto
+      attesa = setTimeout(function () {
+        var url = "https://photon.komoot.io/api/?q=" + encodeURIComponent(q) +
+          "&lat=45.8044&lon=9.0929&limit=5&lang=it";
+        fetch(url)
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            voci = (d.features || [])
+              .filter(function (f) { return f.properties && f.properties.countrycode === "IT"; })
+              .map(function (f) { return etichetta(f.properties); })
+              .filter(function (t, i, a) { return t && a.indexOf(t) === i; });
+            scelto = -1;
+            disegna();
+          })
+          .catch(chiudi);
+      }, 300);
+    });
+
+    input.addEventListener("keydown", function (e) {
+      if (elenco.hidden || !voci.length) return;
+      if (e.key === "ArrowDown") { e.preventDefault(); scelto = (scelto + 1) % voci.length; disegna(); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); scelto = (scelto - 1 + voci.length) % voci.length; disegna(); }
+      else if (e.key === "Enter" && scelto >= 0) { e.preventDefault(); input.value = voci[scelto]; chiudi(); }
+      else if (e.key === "Escape") { chiudi(); }
+    });
+
+    input.addEventListener("blur", function () { setTimeout(chiudi, 120); });
   }
 
   function mostraErrore(testo) {

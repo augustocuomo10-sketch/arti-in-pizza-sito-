@@ -1058,3 +1058,26 @@ body.carrello-aperto{overflow:hidden;}
   .carrello-pannello{width:100vw; border-left:none;}
   .carrello-fab{right:12px; bottom:12px; padding:12px 17px;}
 }
+.carrello-errore{
+  font-size:13.5px; border-radius:12px; padding:11px 13px; margin:0 0 12px;
+  background:color-mix(in srgb, var(--red) 14%, transparent);
+  color:var(--red-ink); border:1px solid color-mix(in srgb, var(--red) 34%, transparent);
+}
+.esito-ordine h1{font-size:clamp(26px,4vw,38px);}
+.esito-ordine.riuscito h1{color:var(--green);}
+.esito-ordine.attenzione h1{color:var(--red-ink);}
+
+/* suggerimenti indirizzo, stile navigatore */
+.carrello-form label.campo-indirizzo{position:relative;}
+.indirizzo-sugg{
+  list-style:none; margin:4px 0 0; padding:4px; position:absolute; z-index:5;
+  left:0; right:0; background:#fff; border-radius:10px;
+  border:1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  box-shadow:0 14px 28px rgba(0,0,0,0.16); max-height:230px; overflow-y:auto;
+}
+.indirizzo-sugg li{
+  padding:9px 10px; font-size:14px; font-weight:400; border-radius:7px; cursor:pointer;
+}
+.indirizzo-sugg li:hover,.indirizzo-sugg li.attivo{
+  background:color-mix(in srgb, var(--azzurro) 24%, transparent);
+}
