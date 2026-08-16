@@ -9,6 +9,7 @@
 // KV binding: ORDINI
 
 import { verificaOrdine, ErroreVerifica } from "./verifiche.js";
+import { verificaZonaConsegna } from "./zona.js";
 
 const ORIGINI_AMMESSE = [
   "https://artiinpizza.com",
@@ -116,6 +117,12 @@ export default {
 
         // *** qui avviene la verifica: prezzi, quantita', orari, dati cliente ***
         const ordine = verificaOrdine(corpo, new Date());
+
+        // Zona di consegna: solo per il domicilio, e solo dopo che il resto
+        // e' risultato valido (evita chiamate esterne su ordini gia' da scartare).
+        if (ordine.cliente.modalita === "domicilio") {
+          ordine.zona = await verificaZonaConsegna(ordine.cliente.indirizzo, env);
+        }
 
         const riferimento = `AIP-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
         const ritorno = `${ORIGINI_AMMESSE[0]}/ordine-ricevuto.html?ref=${encodeURIComponent(riferimento)}`;
