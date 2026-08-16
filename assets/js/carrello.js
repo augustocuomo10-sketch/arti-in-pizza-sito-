@@ -1,6 +1,7 @@
 /* Carrello e ordine — Arti in Pizza
  * Il menu resta HTML statico (indicizzabile): qui lo arricchiamo con i pulsanti.
- * Pagamento: contanti alla consegna (ordine via WhatsApp) oppure online (Stripe).
+ * Pagamento: alla consegna (ordine via WhatsApp) oppure online con SumUp.
+ * I prezzi qui servono solo a mostrare il totale: quello valido lo ricalcola il server.
  */
 (function () {
   "use strict";
@@ -11,9 +12,13 @@
     // Il fisso 031 300809 non puo' ricevere WhatsApp.
     // Quando l'ordine passera' al telefono dedicato, basta cambiare questa riga.
     whatsapp: "393290664551",
-    // Endpoint Stripe (Cloudflare Worker). Finche' e' vuoto il pagamento
-    // online resta disattivato e si puo' ordinare solo con pagamento alla consegna.
+    // Endpoint del Worker Cloudflare che verifica l'ordine e apre il checkout SumUp.
+    // Es. "https://arti-in-pizza-ordini.<sottodominio>.workers.dev"
+    // Finche' e' vuoto, il pagamento online resta disattivato e si ordina
+    // solo con pagamento alla consegna: nessun rischio di incassi a vuoto.
     apiPagamenti: "",
+    // percorso relativo: funziona sia da /menu.html sia da /en/menu.html
+    pdfAllergeni: location.pathname.indexOf("/en/") === 0 ? "../assets/doc/allergeni.pdf" : "assets/doc/allergeni.pdf",
     consegnaSupplemento: 2.0,
     integraleSupplemento: 1.0,
     ordineMinimoDomicilio: 0,
@@ -249,7 +254,7 @@
       '<label class="pag-online"><input type="radio" name="pagamento" value="online"' +
       (CFG.apiPagamenti ? "" : " disabled") + '> Online con carta' +
       (CFG.apiPagamenti ? "" : ' <span class="presto">— attivo a breve</span>') + "</label></fieldset>" +
-      '<p class="carrello-allergeni">Per allergie e intolleranze scrivilo nelle note: prima di confermare vi richiamiamo.</p>' +
+      '<p class="carrello-allergeni">Allergie o intolleranze? Consulta la <a href="' + CFG.pdfAllergeni + '" target="_blank" rel="noopener">tabella allergeni</a> e scrivicelo nelle note: prima di confermare ti richiamiamo.</p>' +
       '<button type="submit" class="btn btn-primary btn-block btn-invia"' + (stato.aperto ? "" : " disabled") + ">" +
       (stato.aperto ? "Invia l'ordine su WhatsApp" : "Ordini sospesi") + "</button>" +
       '<p class="carrello-nota">L\'ordine si apre in WhatsApp già scritto: controlla e premi invio. Ti confermiamo noi tempi e disponibilità.</p>' +
@@ -328,11 +333,11 @@
       pagamento: f.get("pagamento")
     };
     if (!d.nome || !d.telefono) {
-      alert("Servono nome e telefono: senza quelli non possiamo confermarti l'ordine.");
+      mostraErrore("Servono nome e telefono: senza quelli non possiamo confermarti l'ordine.");
       return;
     }
     if (d.modalita === "domicilio" && !d.indirizzo) {
-      alert("Per la consegna a domicilio serve l'indirizzo.");
+      mostraErrore("Per la consegna a domicilio serve l'indirizzo.");
       return;
     }
 
@@ -345,27 +350,41 @@
     window.open(url, "_blank", "noopener");
   }
 
-  // Pagamento online: la sessione Stripe la crea il backend, mai il browser.
+  // Il checkout lo crea il server: qui non passano ne' chiavi ne' prezzi attendibili.
+  // Il server ricalcola tutto dal proprio catalogo e puo' rifiutare l'ordine.
   function pagaOnline(d) {
     var btn = pannello.querySelector(".btn-invia");
     btn.disabled = true;
     btn.textContent = "Apertura pagamento…";
-    fetch(CFG.apiPagamenti + "/crea-sessione", {
+    fetch(CFG.apiPagamenti + "/crea-checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ righe: carrello, cliente: d, origine: location.origin })
     })
-      .then(function (r) { return r.json(); })
+      .then(function (r) { return r.json().then(function (b) { return { stato: r.status, corpo: b }; }); })
       .then(function (res) {
-        if (res && res.url) { location.href = res.url; return; }
-        throw new Error(res && res.errore ? res.errore : "risposta non valida");
+        if (res.stato === 200 && res.corpo && res.corpo.url) { location.href = res.corpo.url; return; }
+        // 422 = l'ordine non ha superato le verifiche del server: il messaggio
+        // e' scritto per il cliente, quindi si mostra cosi' com'e'.
+        throw new Error((res.corpo && res.corpo.errore) || "risposta non valida");
       })
       .catch(function (err) {
         btn.disabled = false;
         btn.textContent = "Invia l'ordine su WhatsApp";
-        alert("Il pagamento online non è disponibile in questo momento (" + err.message +
-          "). Puoi completare l'ordine scegliendo il pagamento alla consegna.");
+        mostraErrore(err.message);
       });
+  }
+
+  function mostraErrore(testo) {
+    var vecchio = pannello.querySelector(".carrello-errore");
+    if (vecchio) vecchio.remove();
+    var box = document.createElement("p");
+    box.className = "carrello-errore";
+    box.setAttribute("role", "alert");
+    box.textContent = testo;
+    var form = pannello.querySelector(".carrello-form");
+    form.insertBefore(box, form.querySelector(".btn-invia"));
+    box.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
 
   // ------------------------------------------------------------------ avvio
