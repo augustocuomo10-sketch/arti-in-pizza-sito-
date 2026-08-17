@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ordini — Arti in Pizza</title>
+<!-- pagina di servizio: non deve finire nei motori di ricerca -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0F2C46">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/img/icone/icona-180.png">
+<link rel="manifest" href="/pannello.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root{
+    --deep:#0F2C46; --deep-2:#123A5C; --deep-text:#F4FAFD;
+    --blu:#1467A6; --azzurro:#1FB2E0; --rosso:#E0392A; --verde:#3F8F5C; --ambra:#B4770E;
+    --fondo:#F3F7FA; --carta:#FFFFFF;
+    --testo:#152430; --testo-tenue:#4C6072;
+    --filo:rgba(20,103,166,.14);
+    --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --dati:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --fondo:#0C1922; --carta:#152833;
+      --testo:#E7F3F8; --testo-tenue:#9FBACB;
+      --blu:#4FB0E6; --azzurro:#38C7F0; --rosso:#F26856; --verde:#6FC38E; --ambra:#E0A542;
+      --filo:rgba(231,243,248,.16);
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--fondo); color:var(--testo);
+    font-family:var(--font); font-size:16px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  header{
+    position:sticky; top:0; z-index:10;
+    background:linear-gradient(160deg,var(--deep-2),var(--deep) 65%);
+    color:var(--deep-text);
+    padding:calc(12px + env(safe-area-inset-top)) 16px 12px;
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  }
+  header h1{font-size:17px; margin:0; font-weight:700; flex:1;}
+  .stato-linea{
+    font-family:var(--dati); font-size:11.5px; color:rgba(244,250,253,.72);
+    display:flex; align-items:center; gap:6px;
+  }
+  .spia{width:8px; height:8px; border-radius:50%; background:var(--verde); flex:none;}
+  .spia.ko{background:var(--rosso);}
+  button{font:inherit; cursor:pointer;}
+  .btn{
+    background:rgba(255,255,255,.14); color:var(--deep-text);
+    border:1px solid rgba(255,255,255,.24); border-radius:9px;
+    padding:7px 13px; font-size:13.5px; font-weight:600;
+  }
+  .btn:hover{background:rgba(255,255,255,.22);}
+
+  main{padding:16px 16px calc(28px + env(safe-area-inset-bottom)); max-width:760px; margin:0 auto;}
+
+  .accesso{
+    background:var(--carta); border:1px solid var(--filo); border-radius:14px;
+    padding:22px; margin-top:24px;
+  }
+  .accesso h2{margin:0 0 10px; font-size:18px;}
+  .accesso p{color:var(--testo-tenue); font-size:14.5px; margin:0 0 14px;}
+  .accesso input{
+    width:100%; font:inherit; font-family:var(--dati); font-size:14px;
+    padding:11px 13px; border-radius:10px; border:1px solid var(--filo);
+    background:var(--fondo); color:var(--testo); margin-bottom:12px;
+  }
+  .btn-scuro{
+    background:var(--blu); color:#fff; border:none; border-radius:10px;
+    padding:12px 18px; font-size:15px; font-weight:650; width:100%;
+  }
+  .generato{
+    font-family:var(--dati); font-size:13px; word-break:break-all;
+    background:color-mix(in srgb,var(--azzurro) 14%,transparent);
+    border-radius:8px; padding:11px 13px; margin:12px 0;
+  }
+
+  .ordine{
+    background:var(--carta); border:1px solid var(--filo); border-left:4px solid var(--blu);
+    border-radius:12px; padding:15px 16px; margin-bottom:12px;
+    box-shadow:0 1px 2px rgba(15,44,70,.05), 0 6px 18px rgba(15,44,70,.05);
+  }
+  .ordine.pagato{border-left-color:var(--verde);}
+  .ordine.contanti{border-left-color:var(--ambra);}
+  .ordine.nuovo{animation:entra .5s ease;}
+  @keyframes entra{from{transform:translateY(-6px); opacity:0;} to{transform:none; opacity:1;}}
+  @media (prefers-reduced-motion:reduce){.ordine.nuovo{animation:none;}}
+
+  .capo{display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-bottom:10px;}
+  .targa{
+    font-family:var(--dati); font-size:11px; font-weight:700; letter-spacing:.05em;
+    text-transform:uppercase; padding:3px 9px; border-radius:999px; color:#fff;
+  }
+  .targa.pagato{background:var(--verde);}
+  .targa.contanti{background:var(--ambra);}
+  .targa.attesa{background:var(--testo-tenue);}
+  .targa.modo{background:var(--blu);}
+  .quando{font-family:var(--dati); font-size:12px; color:var(--testo-tenue); margin-left:auto;}
+
+  .piatti{list-style:none; margin:0 0 11px; padding:0;}
+  .piatti li{
+    display:flex; gap:9px; font-size:15px; padding:3px 0;
+  }
+  .piatti .q{font-weight:700; font-variant-numeric:tabular-nums; min-width:26px;}
+  .piatti .f{font-size:12px; color:var(--testo-tenue); align-self:center;}
+
+  .totale{
+    font-size:18px; font-weight:750; font-variant-numeric:tabular-nums;
+    padding-top:9px; border-top:1px solid var(--filo); margin-bottom:11px;
+  }
+  .totale small{font-weight:500; font-size:12.5px; color:var(--testo-tenue);}
+
+  .chi{font-size:14.5px; display:flex; flex-direction:column; gap:3px;}
+  .chi a{color:var(--blu); font-weight:650; text-decoration:none;}
+  .chi .nota{
+    background:color-mix(in srgb,var(--ambra) 16%,transparent);
+    border-radius:7px; padding:7px 10px; font-size:13.5px; margin-top:5px;
+  }
+  .rif{font-family:var(--dati); font-size:11px; color:var(--testo-tenue); margin-top:9px;}
+
+  .vuoto{text-align:center; color:var(--testo-tenue); padding:50px 20px; font-size:15px;}
+  .errore{
+    background:color-mix(in srgb,var(--rosso) 12%,transparent);
+    border:1px solid color-mix(in srgb,var(--rosso) 40%,transparent);
+    border-radius:10px; padding:12px 14px; font-size:14px; margin-bottom:14px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Ordini</h1>
+  <div class="stato-linea"><span class="spia" id="spia"></span><span id="stato">—</span></div>
+  <button class="btn" id="suono" type="button">🔔 Suono: off</button>
+</header>
+
+<main>
+  <div id="accesso" class="accesso" hidden>
+    <h2>Accesso al pannello</h2>
+    <p>
+      Questo pannello mostra dati dei clienti: nome, telefono e indirizzo.
+      Serve una parola d'accesso, la stessa impostata su Cloudflare come
+      <code>PANNELLO_TOKEN</code>.
+    </p>
+    <input type="password" id="token" placeholder="Incolla qui la parola d'accesso" autocomplete="off">
+    <button class="btn-scuro" id="entra" type="button">Entra</button>
+    <p style="margin:16px 0 0;">
+      Non ce l'hai ancora? Generane una qui: viene creata sul tuo dispositivo
+      e non passa da nessuna parte.
+    </p>
+    <button class="btn-scuro" id="genera" type="button"
+      style="background:transparent; color:var(--blu); border:1px solid var(--filo);">Genera una parola d'accesso</button>
+    <div id="esitoGen" hidden>
+      <div class="generato" id="valoreGen"></div>
+      <p style="margin:0;">
+        Copiala, poi su Cloudflare → Settings → Variables and Secrets aggiungi
+        <code>PANNELLO_TOKEN</code> di tipo <strong>Secret</strong> con questo valore,
+        e promuovi la versione. Poi incollala nel campo qui sopra.
+      </p>
+    </div>
+  </div>
+
+  <div id="installa" class="accesso" hidden style="margin-top:0;margin-bottom:16px;">
+    <h2>Tienilo a portata di mano</h2>
+    <p style="margin-bottom:0;">
+      Puoi installarlo come app: si apre a schermo intero, senza barra del browser.<br>
+      <strong>iPhone:</strong> tocca Condividi <span aria-hidden="true">􀈂</span> e poi «Aggiungi a Home».<br>
+      <strong>Android:</strong> menu ⋮ e poi «Installa app».
+    </p>
+    <button class="btn-scuro" id="chiudiInstalla" type="button"
+      style="background:transparent;color:var(--blu);border:1px solid var(--filo);margin-top:12px;">Ho capito</button>
+  </div>
+
+  <div id="errore" class="errore" hidden></div>
+  <div id="elenco"></div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var API = "https://bitter-firefly-4508.augusto-cuomo10.workers.dev";
+  var CHIAVE = "aip_pannello_token";
+  var OGNI = 20000;                       // ogni quanto si ricontrolla
+
+  var elenco = document.getElementById("elenco");
+  var boxAccesso = document.getElementById("accesso");
+  var boxErrore = document.getElementById("errore");
+  var spia = document.getElementById("spia");
+  var stato = document.getElementById("stato");
+  var btnSuono = document.getElementById("suono");
+
+  var token = null;
+  var visti = {};                          // riferimenti gia' mostrati
+  var suonoAcceso = false;
+  var primaLettura = true;
+
+  try { token = localStorage.getItem(CHIAVE); } catch (e) {}
+
+  // ------------------------------------------------------------- accesso
+  function chiediAccesso() {
+    boxAccesso.hidden = false;
+    elenco.innerHTML = "";
+  }
+
+  document.getElementById("entra").addEventListener("click", function () {
+    var v = document.getElementById("token").value.trim();
+    if (!v) return;
+    token = v;
+    try { localStorage.setItem(CHIAVE, v); } catch (e) {}
+    boxAccesso.hidden = true;
+    aggiorna();
+  });
+
+  document.getElementById("genera").addEventListener("click", function () {
+    var b = new Uint8Array(24);
+    crypto.getRandomValues(b);
+    var s = Array.from(b).map(function (x) { return x.toString(16).padStart(2, "0"); }).join("");
+    document.getElementById("valoreGen").textContent = s;
+    document.getElementById("esitoGen").hidden = false;
+  });
+
+  // -------------------------------------------------------------- suono
+  // Un ordine che arriva mentre si impasta deve farsi sentire. Il browser
+  // consente l'audio solo dopo un gesto dell'utente: da qui il pulsante.
+  var ctx = null;
+  btnSuono.addEventListener("click", function () {
+    suonoAcceso = !suonoAcceso;
+    btnSuono.textContent = suonoAcceso ? "🔔 Suono: on" : "🔔 Suono: off";
+    if (suonoAcceso) {
+      try {
+        ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === "suspended") ctx.resume();
+        suona();
+      } catch (e) {}
+    }
+  });
+
+  function suona() {
+    if (!suonoAcceso || !ctx) return;
+    [0, 180, 360].forEach(function (ritardo) {
+      setTimeout(function () {
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = "sine"; o.frequency.value = 880;
+        g.gain.setValueAtTime(0.0001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.35, ctx.currentTime + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.28);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(); o.stop(ctx.currentTime + 0.3);
+      }, ritardo);
+    });
+  }
+
+  // ------------------------------------------------------------ disegno
+  function euro(n) { return Number(n).toFixed(2).replace(".", ",") + " €"; }
+
+  function orario(iso) {
+    var d = new Date(iso);
+    var oggi = new Date().toDateString() === d.toDateString();
+    var hh = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+    return oggi ? hh : d.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit" }) + " " + hh;
+  }
+
+  function scampa(s) {
+    var d = document.createElement("div");
+    d.textContent = String(s == null ? "" : s);
+    return d.innerHTML;
+  }
+
+  function disegnaOrdine(o) {
+    var pagato = o.stato === "pagato";
+    var contanti = o.pagamento === "contanti";
+    var classe = pagato ? "pagato" : (contanti ? "contanti" : "");
+    var nuovo = !visti[o.riferimento] && !primaLettura;
+
+    var targa = pagato
+      ? '<span class="targa pagato">Pagato</span>'
+      : (contanti ? '<span class="targa contanti">Da incassare</span>'
+                  : '<span class="targa attesa">Pagamento non concluso</span>');
+
+    var modo = o.cliente.modalita === "domicilio"
+      ? '<span class="targa modo">Domicilio</span>'
+      : '<span class="targa modo">Ritiro</span>';
+
+    var piatti = o.righe.map(function (r) {
+      return '<li><span class="q">' + r.qta + '×</span><span>' + scampa(r.nome) +
+        (r.formato !== "unico" ? ' <span class="f">' + scampa(r.formato) + '</span>' : "") +
+        (r.integrale ? ' <span class="f">integrale</span>' : "") + "</span></li>";
+    }).join("");
+
+    var indirizzo = o.cliente.modalita === "domicilio"
+      ? '<span>📍 ' + scampa(o.cliente.indirizzo) +
+        (o.zona && o.zona.minuti != null ? ' <span class="f">(' + o.zona.minuti + ' min)</span>' : "") + "</span>"
+      : "";
+
+    return '<article class="ordine ' + classe + (nuovo ? " nuovo" : "") + '">' +
+      '<div class="capo">' + targa + modo +
+      '<span class="quando">' + orario(o.creato) + "</span></div>" +
+      '<ul class="piatti">' + piatti + "</ul>" +
+      '<div class="totale">' + euro(o.totale) +
+      (pagato ? " <small>già incassato</small>" : " <small>da incassare</small>") + "</div>" +
+      '<div class="chi">' +
+      "<span>👤 " + scampa(o.cliente.nome) + "</span>" +
+      '<span>📞 <a href="tel:' + scampa(o.cliente.telefono) + '">' + scampa(o.cliente.telefono) + "</a></span>" +
+      indirizzo +
+      (o.cliente.orario ? "<span>🕐 " + scampa(o.cliente.orario) + "</span>" : "") +
+      (o.cliente.note ? '<span class="nota">📝 ' + scampa(o.cliente.note) + "</span>" : "") +
+      "</div>" +
+      '<div class="rif">' + scampa(o.riferimento) + "</div>" +
+      "</article>";
+  }
+
+  // ----------------------------------------------------------- lettura
+  function aggiorna() {
+    if (!token) { chiediAccesso(); return; }
+
+    fetch(API + "/ordini?token=" + encodeURIComponent(token))
+      .then(function (r) {
+        if (r.status === 401) {
+          try { localStorage.removeItem(CHIAVE); } catch (e) {}
+          token = null;
+          throw new Error("Parola d'accesso non valida.");
+        }
+        if (!r.ok) throw new Error("Il server ha risposto " + r.status + ".");
+        return r.json();
+      })
+      .then(function (d) {
+        boxErrore.hidden = true;
+        spia.classList.remove("ko");
+        stato.textContent = "aggiornato " + orario(new Date().toISOString());
+
+        var ordini = d.ordini || [];
+        var arrivati = ordini.filter(function (o) { return !visti[o.riferimento]; });
+
+        elenco.innerHTML = ordini.length
+          ? ordini.map(disegnaOrdine).join("")
+          : '<p class="vuoto">Nessun ordine per ora.<br>La pagina si aggiorna da sola ogni 20 secondi.</p>';
+
+        if (arrivati.length && !primaLettura) {
+          suona();
+          if (document.hidden) document.title = "(" + arrivati.length + ") Ordini";
+        }
+        ordini.forEach(function (o) { visti[o.riferimento] = true; });
+        primaLettura = false;
+      })
+      .catch(function (e) {
+        spia.classList.add("ko");
+        stato.textContent = "non aggiornato";
+        boxErrore.textContent = e.message;
+        boxErrore.hidden = false;
+        if (!token) chiediAccesso();
+      });
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) { document.title = "Ordini — Arti in Pizza"; aggiorna(); }
+  });
+
+  // suggerimento d'installazione: solo da telefono, solo se non e' gia' installata
+  try {
+    var giaApp = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+    var suTelefono = window.innerWidth < 820;
+    if (!giaApp && suTelefono && !localStorage.getItem("aip_installa_visto")) {
+      document.getElementById("installa").hidden = false;
+      document.getElementById("chiudiInstalla").addEventListener("click", function () {
+        document.getElementById("installa").hidden = true;
+        try { localStorage.setItem("aip_installa_visto", "1"); } catch (e) {}
+      });
+    }
+  } catch (e) {}
+
+  if (!token) chiediAccesso(); else aggiorna();
+  setInterval(aggiorna, OGNI);
+})();
+</script>
+</body>
+</html>
