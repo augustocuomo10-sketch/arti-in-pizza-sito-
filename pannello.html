@@ -158,6 +158,7 @@
 <header>
   <h1>Ordini</h1>
   <div class="stato-linea"><span class="spia" id="spia"></span><span id="stato">—</span></div>
+  <button class="btn" id="notifiche" type="button">📲 Notifiche</button>
   <button class="btn" id="suono" type="button">🔔 Suono: off</button>
 </header>
 
@@ -184,6 +185,21 @@
         <code>PANNELLO_TOKEN</code> di tipo <strong>Secret</strong> con questo valore,
         e promuovi la versione. Poi incollala nel campo qui sopra.
       </p>
+    </div>
+  </div>
+
+  <div id="chiaviPush" class="accesso" hidden style="margin-top:0;margin-bottom:16px;">
+    <h2>Chiavi per le notifiche</h2>
+    <p>
+      Servono una volta sola. Vengono create qui sul tuo dispositivo: la privata
+      non passa da nessuna parte, esattamente come la parola d'accesso.
+    </p>
+    <button class="btn-scuro" id="generaPush" type="button">Genera le chiavi</button>
+    <div id="esitoPush" hidden>
+      <p style="margin:14px 0 4px;"><strong>Chiave pubblica</strong> — questa mandala pure in chat, non è segreta:</p>
+      <div class="generato" id="pushPub"></div>
+      <p style="margin:14px 0 4px;"><strong>Chiave privata</strong> — questa <em>no</em>. Va su Cloudflare come <code>VAPID_PRIVATE</code>, di tipo Secret:</p>
+      <div class="generato" id="pushPriv"></div>
     </div>
   </div>
 
@@ -395,6 +411,96 @@
     if (!b || b.disabled) return;
     cambiaStato(b.getAttribute("data-rif"), b.getAttribute("data-stato"), b);
   });
+
+  // ------------------------------------------------------- notifiche push
+  // La chiave pubblica del server. Finche' e' vuota, il pulsante propone di
+  // generare la coppia: e' il primo giro di configurazione.
+  var VAPID_PUB = "";
+
+  function base64UrlToUint8(s) {
+    var pad = "=".repeat((4 - (s.length % 4)) % 4);
+    var b64 = (s + pad).replace(/-/g, "+").replace(/_/g, "/");
+    var raw = atob(b64);
+    var out = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
+  }
+
+  function b64url(buf) {
+    var b = new Uint8Array(buf), s = "";
+    for (var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+    return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
+  document.getElementById("generaPush").addEventListener("click", function () {
+    crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"])
+      .then(function (coppia) {
+        return Promise.all([
+          crypto.subtle.exportKey("raw", coppia.publicKey),
+          crypto.subtle.exportKey("jwk", coppia.privateKey)
+        ]);
+      })
+      .then(function (r) {
+        document.getElementById("pushPub").textContent = b64url(r[0]);
+        document.getElementById("pushPriv").textContent = r[1].d;
+        document.getElementById("esitoPush").hidden = false;
+      })
+      .catch(function (e) {
+        boxErrore.textContent = "Non riesco a generare le chiavi: " + e.message;
+        boxErrore.hidden = false;
+      });
+  });
+
+  function stampaStatoNotifiche() {
+    var b = document.getElementById("notifiche");
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+      b.textContent = "📲 Non supportate"; b.disabled = true; return;
+    }
+    if (Notification.permission === "granted") b.textContent = "📲 Notifiche: attive";
+    else if (Notification.permission === "denied") b.textContent = "📲 Notifiche: bloccate";
+    else b.textContent = "📲 Attiva notifiche";
+  }
+
+  document.getElementById("notifiche").addEventListener("click", function () {
+    if (!VAPID_PUB) {
+      document.getElementById("chiaviPush").hidden = false;
+      document.getElementById("chiaviPush").scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    if (Notification.permission === "denied") {
+      boxErrore.textContent = "Le notifiche sono bloccate nelle impostazioni del browser per questo sito: vanno riabilitate da lì.";
+      boxErrore.hidden = false;
+      return;
+    }
+    Notification.requestPermission().then(function (esito) {
+      stampaStatoNotifiche();
+      if (esito !== "granted") return;
+      return navigator.serviceWorker.register("/sw-pannello.js")
+        .then(function (reg) {
+          return reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: base64UrlToUint8(VAPID_PUB)
+          });
+        })
+        .then(function (iscrizione) {
+          return fetch(API + "/push/registra", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: token, iscrizione: iscrizione })
+          });
+        })
+        .then(function (r) {
+          if (!r.ok) throw new Error("il server ha risposto " + r.status);
+          boxErrore.hidden = true;
+        })
+        .catch(function (e) {
+          boxErrore.textContent = "Notifiche non attivate: " + e.message;
+          boxErrore.hidden = false;
+        });
+    });
+  });
+
+  stampaStatoNotifiche();
 
   // ----------------------------------------------------------- lettura
   function aggiorna() {
