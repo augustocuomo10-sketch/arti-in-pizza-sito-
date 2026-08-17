@@ -251,15 +251,16 @@
       '<label class="campo-indirizzo" hidden>Indirizzo di consegna<input type="text" name="indirizzo" autocomplete="street-address"></label>' +
       '<label>A che ora<input type="text" name="orario" placeholder="es. 20:00, oppure «prima possibile»"></label>' +
       '<label>Note<textarea name="note" rows="2" placeholder="Allergie, citofono, preferenze sull\'impasto…"></textarea></label>' +
-      '<fieldset class="carrello-pagamento"><legend>Pagamento</legend>' +
+      '<fieldset class="carrello-pagamento"><legend>Come vuoi pagare</legend>' +
+      '<p class="pag-intro">Concludi qui: paghi subito con carta, oppure alla consegna.</p>' +
       '<label><input type="radio" name="pagamento" value="contanti" checked> Alla consegna o al ritiro</label>' +
       '<label class="pag-online"><input type="radio" name="pagamento" value="online"' +
       (CFG.apiPagamenti ? "" : " disabled") + '> Online con carta' +
       (CFG.apiPagamenti ? "" : ' <span class="presto">— attivo a breve</span>') + "</label></fieldset>" +
       '<p class="carrello-allergeni">Allergie o intolleranze? Consulta la <a href="' + CFG.pdfAllergeni + '" target="_blank" rel="noopener">tabella allergeni</a> e scrivicelo nelle note: prima di confermare ti richiamiamo.</p>' +
       '<button type="submit" class="btn btn-primary btn-block btn-invia"' + (stato.aperto ? "" : " disabled") + ">" +
-      (stato.aperto ? "Invia l'ordine su WhatsApp" : "Ordini sospesi") + "</button>" +
-      '<p class="carrello-nota">L\'ordine si apre in WhatsApp già scritto: controlla e premi invio. Ti confermiamo noi tempi e disponibilità.</p>' +
+      (stato.aperto ? "Concludi l'ordine" : "Ordini sospesi") + "</button>" +
+      '<p class="carrello-nota"></p>' +
       "</form>";
 
     pannello.innerHTML = h;
@@ -297,6 +298,26 @@
 
     agganciaSuggerimenti(campoInd.querySelector("input"));
     agganciaVerificheCampi();
+
+    // il pulsante deve dire cosa succede davvero premendolo
+    var radioPag = pannello.querySelectorAll('input[name="pagamento"]');
+    function aggiornaEtichettaInvio() {
+      var btn = pannello.querySelector(".btn-invia");
+      var nota = pannello.querySelector(".carrello-nota");
+      if (!btn || btn.disabled) return;
+      var online = pannello.querySelector('input[name="pagamento"]:checked').value === "online";
+      if (online) {
+        btn.textContent = "Concludi e paga " + euro(totaleRighe() +
+          (pannello.querySelector('input[name="modalita"]:checked').value === "domicilio" ? CFG.consegnaSupplemento : 0));
+        nota.textContent = "Ti portiamo sulla pagina di pagamento sicura. A pagamento riuscito l'ordine è confermato.";
+      } else {
+        btn.textContent = "Concludi l'ordine";
+        nota.textContent = "L'ordine si apre in WhatsApp già scritto: controlla e premi invio. Paghi alla consegna o al ritiro.";
+      }
+    }
+    radioPag.forEach(function (r) { r.addEventListener("change", aggiornaEtichettaInvio); });
+    radios.forEach(function (r) { r.addEventListener("change", aggiornaEtichettaInvio); });
+    aggiornaEtichettaInvio();
 
     pannello.querySelector(".carrello-form").addEventListener("submit", function (e) {
       e.preventDefault();
