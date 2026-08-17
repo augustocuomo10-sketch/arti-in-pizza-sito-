@@ -413,6 +413,45 @@ export default {
       return json({ ordini }, 200, origine);
     }
 
+    // ------------------------------------------------------- diagnosi
+    // Dice se i canali d'avviso sono pronti, senza rivelare alcun valore:
+    // solo "c'e'/non c'e'" e quanti dispositivi risultano registrati.
+    // Serve a smettere di indovinare quando un avviso non arriva.
+    if (url.pathname === "/diagnostica" && richiesta.method === "GET") {
+      let dispositivi = 0, ultimoErrore = null;
+      if (env.ORDINI) {
+        const l = await env.ORDINI.list({ prefix: "push:", limit: 50 });
+        dispositivi = l.keys.length;
+        // recupera il motivo del fallimento dall'ultimo ordine registrato
+        const ord = await env.ORDINI.list({ prefix: "ordine:", limit: 20 });
+        for (const k of ord.keys) {
+          const v = await env.ORDINI.get(k.name);
+          if (!v) continue;
+          const d = JSON.parse(v);
+          if (d.avvisiFalliti && d.avvisiFalliti.length) {
+            ultimoErrore = d.avvisiFalliti[0].motivo || null;
+          }
+        }
+      }
+      return json({
+        archivio: !!env.ORDINI,
+        telegram: {
+          tokenPresente: !!env.TELEGRAM_TOKEN,
+          destinatariPresenti: !!env.TELEGRAM_CHAT,
+          ultimoErrore
+        },
+        push: {
+          chiavePresente: !!env.VAPID_PRIVATE,
+          dispositiviRegistrati: dispositivi
+        },
+        sumup: {
+          chiavePresente: !!env.SUMUP_API_KEY,
+          merchantPresente: !!env.SUMUP_MERCHANT_CODE
+        },
+        chiusuraFino: env.CHIUSURA_FINO || null
+      }, 200, origine);
+    }
+
     return json({ errore: "Endpoint inesistente." }, 404, origine);
   }
 };
