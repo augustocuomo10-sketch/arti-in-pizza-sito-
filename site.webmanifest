@@ -1,0 +1,13 @@
+{
+  "name": "Arti in Pizza — Pizzeria a Como",
+  "short_name": "Arti in Pizza",
+  "description": "Ordina pizza d'asporto o a domicilio a Como. Pizzeria in Via Carloni dal 1997.",
+  "start_url": "/menu.html",
+  "display": "standalone",
+  "background_color": "#0F2C46",
+  "theme_color": "#0F2C46",
+  "icons": [
+    { "src": "/assets/img/icone/icona-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/img/icone/icona-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
