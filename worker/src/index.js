@@ -11,6 +11,7 @@
 import { verificaOrdine, ErroreVerifica } from "./verifiche.js";
 import { verificaZonaConsegna } from "./zona.js";
 import { avvisaPizzeria } from "./avvisi.js";
+import { avvisaPush, registraDispositivo } from "./push.js";
 
 const ORIGINI_AMMESSE = [
   "https://artiinpizza.com",
@@ -196,10 +197,16 @@ export default {
         const { riferimento, dati } = await verificaEArchivia(env, corpo, "contanti");
         await salva(env, dati);
 
-        const esito = await avvisaPizzeria(env, dati);
-        if (esito.inviato) {
+        const [esito, esitoPush] = await Promise.all([
+          avvisaPizzeria(env, dati),
+          avvisaPush(env, dati)
+        ]);
+        if (esito.inviato || esitoPush.inviato) {
           dati.avvisato = new Date().toISOString();
-          dati.consegnatoA = esito.consegnatiA + "/" + esito.totale;
+          dati.canali = {
+            telegram: esito.inviato ? esito.consegnatiA + "/" + esito.totale : false,
+            push: esitoPush.inviato ? esitoPush.consegnatiA + "/" + esitoPush.totale : false
+          };
         }
         if (esito.falliti) dati.avvisiFalliti = esito.falliti;
         await salva(env, dati);
@@ -249,8 +256,8 @@ export default {
 
         // avviso alla pizzeria: solo a pagamento riuscito e una volta sola
         if (dati.stato === "pagato" && !dati.avvisato) {
-          const esito = await avvisaPizzeria(env, dati);
-          if (esito.inviato) dati.avvisato = new Date().toISOString();
+          const [e1, e2] = await Promise.all([avvisaPizzeria(env, dati), avvisaPush(env, dati)]);
+          if (e1.inviato || e2.inviato) dati.avvisato = new Date().toISOString();
         }
         await env.ORDINI.put(`ordine:${rif}`, JSON.stringify(dati), { expirationTtl: 60 * 60 * 24 * 30 });
 
@@ -284,8 +291,8 @@ export default {
             dati.stato = "pagato";
             dati.pagatoIl = new Date().toISOString();
             if (!dati.avvisato) {
-              const esito = await avvisaPizzeria(env, dati);
-              if (esito.inviato) dati.avvisato = new Date().toISOString();
+              const [e1, e2] = await Promise.all([avvisaPizzeria(env, dati), avvisaPush(env, dati)]);
+              if (e1.inviato || e2.inviato) dati.avvisato = new Date().toISOString();
             }
             await env.ORDINI.put(`ordine:${rif}`, JSON.stringify(dati), { expirationTtl: 60 * 60 * 24 * 30 });
           }
@@ -294,6 +301,22 @@ export default {
       } catch {
         // A SumUp si risponde 200 comunque: un errore qui farebbe ritentare all'infinito.
         return new Response("ok", { status: 200 });
+      }
+    }
+
+    // --------------------------------------- registrazione di un dispositivo
+    if (url.pathname === "/push/registra" && richiesta.method === "POST") {
+      if (!env.PANNELLO_TOKEN) return json({ errore: "Non configurato." }, 503, origine);
+      if (!env.ORDINI) return json({ errore: "Archivio non disponibile." }, 503, origine);
+      try {
+        const corpo = await richiesta.json();
+        if (corpo.token !== env.PANNELLO_TOKEN) {
+          return json({ errore: "Non autorizzato." }, 401, origine);
+        }
+        const chiave = await registraDispositivo(env, corpo.iscrizione);
+        return json({ registrato: true, chiave }, 200, origine);
+      } catch (e) {
+        return json({ errore: String(e.message || e) }, 400, origine);
       }
     }
 
