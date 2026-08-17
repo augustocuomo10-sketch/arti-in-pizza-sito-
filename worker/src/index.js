@@ -10,6 +10,7 @@
 
 import { verificaOrdine, ErroreVerifica } from "./verifiche.js";
 import { verificaZonaConsegna } from "./zona.js";
+import { avvisaPizzeria } from "./avvisi.js";
 
 const ORIGINI_AMMESSE = [
   "https://artiinpizza.com",
@@ -82,6 +83,32 @@ async function leggiCheckoutSumUp(env, idCheckout) {
   return r.json();
 }
 
+// Verifica completa e archiviazione. Condivisa fra carta e contanti:
+// le regole devono essere le stesse, altrimenti il contante diventa
+// la porta di servizio da cui passa quello che la carta rifiuta.
+async function verificaEArchivia(env, corpo, pagamento) {
+  const ordine = verificaOrdine(corpo, new Date(), env.CHIUSURA_FINO);
+  if (ordine.cliente.modalita === "domicilio") {
+    ordine.zona = await verificaZonaConsegna(ordine.cliente.indirizzo, env);
+  }
+  const riferimento = `AIP-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+  const dati = {
+    riferimento,
+    pagamento,                       // "carta" | "contanti"
+    attesoEuro: ordine.totali.totale,
+    ordine,
+    stato: pagamento === "contanti" ? "da_incassare" : "in_attesa",
+    creato: new Date().toISOString()
+  };
+  return { ordine, riferimento, dati };
+}
+
+async function salva(env, dati) {
+  if (!env.ORDINI) return;
+  await env.ORDINI.put(`ordine:${dati.riferimento}`, JSON.stringify(dati),
+    { expirationTtl: 60 * 60 * 24 * 30 });
+}
+
 // ------------------------------------------------------------- handler
 export default {
   async fetch(richiesta, env) {
@@ -115,31 +142,13 @@ export default {
         try { corpo = JSON.parse(grezzo); }
         catch { return json({ errore: "Richiesta non leggibile." }, 400, origine); }
 
-        // *** qui avviene la verifica: prezzi, quantita', orari, dati cliente ***
-        const ordine = verificaOrdine(corpo, new Date(), env.CHIUSURA_FINO);
+        // *** verifica: prezzi, quantita', orari, zona, dati cliente ***
+        const { ordine, riferimento, dati } = await verificaEArchivia(env, corpo, "carta");
 
-        // Zona di consegna: solo per il domicilio, e solo dopo che il resto
-        // e' risultato valido (evita chiamate esterne su ordini gia' da scartare).
-        if (ordine.cliente.modalita === "domicilio") {
-          ordine.zona = await verificaZonaConsegna(ordine.cliente.indirizzo, env);
-        }
-
-        const riferimento = `AIP-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
         const ritorno = `${ORIGINI_AMMESSE[0]}/ordine-ricevuto.html?ref=${encodeURIComponent(riferimento)}`;
         const checkout = await creaCheckoutSumUp(env, ordine, riferimento, ritorno);
-
-        // L'importo verificato resta sul server: e' il metro di paragone
-        // quando piu' tardi controlleremo quanto e' stato davvero pagato.
-        if (env.ORDINI) {
-          await env.ORDINI.put(`ordine:${riferimento}`, JSON.stringify({
-            riferimento,
-            idCheckout: checkout.id,
-            attesoEuro: ordine.totali.totale,
-            ordine,
-            stato: "in_attesa",
-            creato: new Date().toISOString()
-          }), { expirationTtl: 60 * 60 * 24 * 30 });
-        }
+        dati.idCheckout = checkout.id;
+        await salva(env, dati);
 
         return json({
           url: checkout.hosted_checkout_url,
@@ -152,6 +161,49 @@ export default {
           return json({ errore: e.message, codice: e.codice }, 422, origine);
         }
         return json({ errore: "Non riusciamo ad aprire il pagamento. Riprova, oppure scegli il pagamento alla consegna." }, 502, origine);
+      }
+    }
+
+    // ------------------------------------------------- ordine in contanti
+    // Stesse verifiche della carta. Cambia solo che non c'e' nulla da
+    // incassare adesso: l'ordine e' valido subito e la pizzeria va avvisata.
+    if (url.pathname === "/ordine-contante" && richiesta.method === "POST") {
+      try {
+        if (origine && !ORIGINI_AMMESSE.includes(origine)) {
+          return json({ errore: "Origine non autorizzata." }, 403, origine);
+        }
+        if (await superaLimite(env, ip)) {
+          return json({ errore: "Troppi tentativi ravvicinati. Riprova fra qualche minuto." }, 429, origine);
+        }
+        const grezzo = await richiesta.text();
+        if (grezzo.length > MAX_CORPO) return json({ errore: "Richiesta troppo grande." }, 413, origine);
+
+        let corpo;
+        try { corpo = JSON.parse(grezzo); }
+        catch { return json({ errore: "Richiesta non leggibile." }, 400, origine); }
+
+        const { riferimento, dati } = await verificaEArchivia(env, corpo, "contanti");
+        await salva(env, dati);
+
+        const esito = await avvisaPizzeria(env, dati);
+        if (esito.inviato) {
+          dati.avvisato = new Date().toISOString();
+          await salva(env, dati);
+        }
+
+        // L'ordine e' comunque valido e archiviato: se l'avviso non parte
+        // lo diciamo al cliente, cosi' puo' chiamare invece di restare in dubbio.
+        return json({
+          riferimento,
+          totale: dati.attesoEuro,
+          avvisato: esito.inviato
+        }, 200, origine);
+
+      } catch (e) {
+        if (e instanceof ErroreVerifica) {
+          return json({ errore: e.message, codice: e.codice }, 422, origine);
+        }
+        return json({ errore: "Non riusciamo a registrare l'ordine. Chiamaci allo 031 300809." }, 502, origine);
       }
     }
 
@@ -181,6 +233,12 @@ export default {
           dati.stato = "pagato";
         }
         dati.verificato = new Date().toISOString();
+
+        // avviso alla pizzeria: solo a pagamento riuscito e una volta sola
+        if (dati.stato === "pagato" && !dati.avvisato) {
+          const esito = await avvisaPizzeria(env, dati);
+          if (esito.inviato) dati.avvisato = new Date().toISOString();
+        }
         await env.ORDINI.put(`ordine:${rif}`, JSON.stringify(dati), { expirationTtl: 60 * 60 * 24 * 30 });
 
         return json({
@@ -212,6 +270,10 @@ export default {
           if (dati.stato !== "pagato") {          // idempotenza
             dati.stato = "pagato";
             dati.pagatoIl = new Date().toISOString();
+            if (!dati.avvisato) {
+              const esito = await avvisaPizzeria(env, dati);
+              if (esito.inviato) dati.avvisato = new Date().toISOString();
+            }
             await env.ORDINI.put(`ordine:${rif}`, JSON.stringify(dati), { expirationTtl: 60 * 60 * 24 * 30 });
           }
         }
@@ -220,6 +282,35 @@ export default {
         // A SumUp si risponde 200 comunque: un errore qui farebbe ritentare all'infinito.
         return new Response("ok", { status: 200 });
       }
+    }
+
+    // ------------------------------------------------- elenco per il pannello
+    if (url.pathname === "/ordini" && richiesta.method === "GET") {
+      if (!env.PANNELLO_TOKEN || url.searchParams.get("token") !== env.PANNELLO_TOKEN) {
+        return json({ errore: "Non autorizzato." }, 401, origine);
+      }
+      if (!env.ORDINI) return json({ errore: "Archivio non disponibile." }, 503, origine);
+
+      const elenco = await env.ORDINI.list({ prefix: "ordine:", limit: 60 });
+      const ordini = [];
+      for (const k of elenco.keys) {
+        const v = await env.ORDINI.get(k.name);
+        if (!v) continue;
+        const d = JSON.parse(v);
+        ordini.push({
+          riferimento: d.riferimento,
+          creato: d.creato,
+          pagamento: d.pagamento || "carta",
+          stato: d.stato,
+          totale: d.attesoEuro,
+          cliente: d.ordine.cliente,
+          righe: d.ordine.righe,
+          zona: d.ordine.zona || null
+        });
+      }
+      // dal piu' recente: e' quello che serve guardare per primo
+      ordini.sort((a, b) => (a.creato < b.creato ? 1 : -1));
+      return json({ ordini }, 200, origine);
     }
 
     return json({ errore: "Endpoint inesistente." }, 404, origine);

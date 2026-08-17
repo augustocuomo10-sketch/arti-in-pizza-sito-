@@ -312,7 +312,7 @@
         nota.textContent = "Ti portiamo sulla pagina di pagamento sicura. A pagamento riuscito l'ordine è confermato.";
       } else {
         btn.textContent = "Concludi l'ordine";
-        nota.textContent = "L'ordine si apre in WhatsApp già scritto: controlla e premi invio. Paghi alla consegna o al ritiro.";
+        nota.textContent = "Inviamo l'ordine in pizzeria e ti confermiamo noi i tempi. Paghi alla consegna o al ritiro.";
       }
     }
     radioPag.forEach(function (r) { r.addEventListener("change", aggiornaEtichettaInvio); });
@@ -378,9 +378,46 @@
       pagaOnline(d);
       return;
     }
+    inviaContante(d);
+  }
 
-    var url = "https://wa.me/" + CFG.whatsapp + "?text=" + encodeURIComponent(componiTesto(d));
-    window.open(url, "_blank", "noopener");
+  // Ordine da pagare alla consegna: passa dal server come quello con carta,
+  // cosi' subisce le stesse verifiche e finisce nello stesso posto.
+  function inviaContante(d) {
+    if (!CFG.apiPagamenti) {                      // rete di sicurezza
+      window.open("https://wa.me/" + CFG.whatsapp + "?text=" +
+        encodeURIComponent(componiTesto(d)), "_blank", "noopener");
+      return;
+    }
+    var btn = pannello.querySelector(".btn-invia");
+    var testoPrima = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Invio in corso…";
+
+    fetch(CFG.apiPagamenti + "/ordine-contante", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ righe: carrello, cliente: d })
+    })
+      .then(function (r) { return r.json().then(function (b) { return { stato: r.status, corpo: b }; }); })
+      .then(function (res) {
+        if (res.stato !== 200 || !res.corpo.riferimento) {
+          throw new Error((res.corpo && res.corpo.errore) || "risposta non valida");
+        }
+        svuota();
+        location.href = "ordine-ricevuto.html?ref=" +
+          encodeURIComponent(res.corpo.riferimento) + "&modo=contanti";
+      })
+      .catch(function (err) {
+        btn.disabled = false;
+        btn.textContent = testoPrima;
+        mostraErrore(err.message);
+      });
+  }
+
+  function svuota() {
+    carrello = [];
+    try { localStorage.removeItem(CHIAVE); } catch (e) {}
   }
 
   // Il checkout lo crea il server: qui non passano ne' chiavi ne' prezzi attendibili.
@@ -396,7 +433,7 @@
     })
       .then(function (r) { return r.json().then(function (b) { return { stato: r.status, corpo: b }; }); })
       .then(function (res) {
-        if (res.stato === 200 && res.corpo && res.corpo.url) { location.href = res.corpo.url; return; }
+        if (res.stato === 200 && res.corpo && res.corpo.url) { svuota(); location.href = res.corpo.url; return; }
         // 422 = l'ordine non ha superato le verifiche del server: il messaggio
         // e' scritto per il cliente, quindi si mostra cosi' com'e'.
         throw new Error((res.corpo && res.corpo.errore) || "risposta non valida");
