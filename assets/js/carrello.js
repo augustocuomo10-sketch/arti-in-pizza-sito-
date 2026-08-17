@@ -95,7 +95,7 @@
     errChiusi: "A quell'ora siamo chiusi. Pranzo 11:30–15:00 (lun–sab), cena 18:30–22:00.",
     errCampi: "Controlla i campi segnalati qui sopra.",
     invio: "Invio in corso…",
-    chiuso: T.chiuso,
+    chiuso: "Ora siamo chiusi. Pranzo 11:30–15:00 (lun–sab), cena 18:30–22:00 (tutti i giorni). Puoi comunque preparare l'ordine e inviarlo all'apertura.",
     integrale: "integrale"
   };
 
@@ -133,7 +133,7 @@
     return {
       aperto: false,
       chiusuraFerie: false,
-      messaggio: "Ora siamo chiusi. Pranzo 11:30–15:00 (lun–sab), cena 18:30–22:00 (tutti i giorni). Puoi comunque preparare l'ordine e inviarlo all'apertura."
+      messaggio: T.chiuso
     };
   }
 
