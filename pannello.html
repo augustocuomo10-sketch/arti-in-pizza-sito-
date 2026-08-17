@@ -181,6 +181,7 @@
   <div class="stato-linea"><span class="spia" id="spia"></span><span id="stato">—</span></div>
   <button class="btn" id="notifiche" type="button">📲 Notifiche</button>
   <button class="btn" id="suono" type="button">🔔 Suono: off</button>
+  <button class="btn" id="prova" type="button">Prova allarme</button>
 </header>
 
 <div class="allarme" id="allarme" role="alertdialog" aria-live="assertive">
@@ -359,6 +360,22 @@
   }
 
   document.getElementById("fermaAllarme").addEventListener("click", spegniAllarme);
+
+  // Prova: serve a verificare l'allarme senza aspettare un ordine vero.
+  // Accende anche l'audio, perche' il motivo piu' comune per cui "non suona"
+  // e' semplicemente che il suono non era stato attivato.
+  document.getElementById("prova").addEventListener("click", function () {
+    if (!suonoAcceso) {
+      suonoAcceso = true;
+      btnSuono.textContent = "🔔 Suono: on";
+      try {
+        ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === "suspended") ctx.resume();
+      } catch (e) {}
+      tieniAcceso();
+    }
+    accendiAllarme(1);
+  });
 
   // compatibilita' con il resto del codice, che chiama ancora suona()
   function suona() { squillo(); }

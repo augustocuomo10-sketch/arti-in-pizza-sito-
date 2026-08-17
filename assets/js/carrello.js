@@ -32,6 +32,73 @@
     }
   };
 
+
+  // ------------------------------------------------------------- lingua
+  // Le pagine inglesi stanno sotto /en/: il carrello e' lo stesso codice,
+  // cambiano solo i testi. Gli identificativi dei piatti restano quelli
+  // italiani, cosi' il server riconosce l'ordine da qualunque lingua arrivi.
+  var EN = location.pathname.indexOf("/en/") === 0;
+
+  var T = EN ? {
+    apri: "Order", piatti1: " item", piattiN: " items",
+    aggiungi: "Add", titolo: "Your order",
+    vuoto: "Your basket is empty. Pick from the menu — prices are the same as in the restaurant.",
+    ritiro: "Pick up in store", domicilio: "Home delivery (+",
+    piattiRiga: "Items", consegna: "Delivery", totale: "Total",
+    nome: "Full name", telefono: "Phone", indirizzo: "Delivery address",
+    orario: "What time", orarioSegno: "e.g. 8:00 pm, or «as soon as possible»",
+    note: "Notes", notePlaceholder: "Allergies, doorbell, dough preferences…",
+    pagamento: "How would you like to pay",
+    pagIntro: "Finish here: pay now by card, or on delivery.",
+    contanti: "On delivery or pickup", online: "Card online",
+    allergeni: "For allergies and intolerances see the ",
+    allergeniLink: "allergen table (PDF)", allergeniFine: ", and tell us in the notes.",
+    concludi: "Place the order", concludiPaga: "Pay ",
+    sospesi: "Orders paused",
+    notaContanti: "We send the order to the pizzeria and confirm the timing. You pay on delivery or pickup.",
+    notaCarta: "We'll take you to the secure payment page. Once paid, your order is confirmed.",
+    chiudi: "Close", togli: "Remove one", metti: "Add one",
+    errNome: "We need a name to confirm your order.",
+    errTelefono: "That phone number doesn't look right: we need it to confirm.",
+    errTelefonoVuoto: "We need your phone: without it we can't confirm the order.",
+    errIndirizzo: "We need a full address for delivery.",
+    errOrario: "Write a time like 8:00 pm, or «as soon as possible».",
+    errChiusi: "We're closed at that time. Lunch 11:30am–3pm (Mon–Sat), dinner 6:30–10pm.",
+    errCampi: "Please check the highlighted fields.",
+    invio: "Sending…",
+    chiuso: "We're closed right now. Lunch 11:30am–3pm (Mon–Sat), dinner 6:30–10pm (every day). You can still build your order and send it when we open.",
+    integrale: "wholemeal"
+  } : {
+    apri: "Ordina", piatti1: " piatto", piattiN: " piatti",
+    aggiungi: "Aggiungi", titolo: "Il tuo ordine",
+    vuoto: "Il carrello è vuoto. Scegli dal menù qui accanto — i prezzi sono quelli del locale.",
+    ritiro: "Ritiro in pizzeria", domicilio: "Consegna a domicilio (+",
+    piattiRiga: "Piatti", consegna: "Consegna", totale: "Totale",
+    nome: "Nome e cognome", telefono: "Telefono", indirizzo: "Indirizzo di consegna",
+    orario: "A che ora", orarioSegno: "es. 20:00, oppure «prima possibile»",
+    note: "Note", notePlaceholder: "Allergie, citofono, preferenze sull'impasto…",
+    pagamento: "Come vuoi pagare",
+    pagIntro: "' + T.pagIntro + '",
+    contanti: "Alla consegna o al ritiro", online: "Online con carta",
+    allergeni: "Per allergie e intolleranze consulta la ",
+    allergeniLink: "tabella allergeni (PDF)", allergeniFine: ", e scrivilo nelle note.",
+    concludi: "Concludi l'ordine", concludiPaga: "Concludi e paga ",
+    sospesi: "Ordini sospesi",
+    notaContanti: "Inviamo l'ordine in pizzeria e ti confermiamo noi i tempi. Paghi alla consegna o al ritiro.",
+    notaCarta: "Ti portiamo sulla pagina di pagamento sicura. A pagamento riuscito l'ordine è confermato.",
+    chiudi: "Chiudi", togli: "Togli uno", metti: "Aggiungi uno",
+    errNome: "Serve un nome per confermare l'ordine.",
+    errTelefono: "Il numero non sembra valido: serve per confermarti l'ordine.",
+    errTelefonoVuoto: "Serve il telefono: senza non possiamo confermarti l'ordine.",
+    errIndirizzo: "Per la consegna a domicilio serve l'indirizzo.",
+    errOrario: "Scrivi un orario tipo 20:00, oppure «prima possibile».",
+    errChiusi: "A quell'ora siamo chiusi. Pranzo 11:30–15:00 (lun–sab), cena 18:30–22:00.",
+    errCampi: "Controlla i campi segnalati qui sopra.",
+    invio: "Invio in corso…",
+    chiuso: T.chiuso,
+    integrale: "integrale"
+  };
+
   var CHIAVE = "aip_carrello_v1";
   var carrello = [];
 
@@ -133,9 +200,9 @@
         b.type = "button";
         b.className = "btn-aggiungi";
         b.setAttribute("aria-label",
-          "Aggiungi " + nome + (p.formato !== "unico" ? " formato " + p.formato : "") + " al carrello");
+          T.aggiungi + " " + nome + (p.formato !== "unico" ? " formato " + p.formato : "") + " al carrello");
         b.innerHTML = '<span aria-hidden="true">+</span> ' +
-          (p.formato === "unico" ? "Aggiungi" : p.formato);
+          (p.formato === "unico" ? T.aggiungi : p.formato);
         b.addEventListener("click", function () {
           aggiungi({
             id: id, nome: nome, formato: p.formato, prezzo: p.prezzo, qta: 1,
@@ -194,7 +261,7 @@
 
     bottoneFlottante.innerHTML =
       '<span class="fab-icona" aria-hidden="true">🛒</span>' +
-      '<span class="fab-testo">' + (pezzi ? pezzi + (pezzi === 1 ? " piatto" : " piatti") : "Ordina") + '</span>' +
+      '<span class="fab-testo">' + (pezzi ? pezzi + (pezzi === 1 ? T.piatti1 : T.piattiN) : T.apri) + '</span>' +
       (pezzi ? '<span class="fab-tot">' + euro(tot) + "</span>" : "");
     bottoneFlottante.setAttribute("aria-label",
       pezzi ? "Apri l'ordine: " + pezzi + " piatti, totale " + euro(tot) : "Apri il carrello, vuoto");
@@ -204,7 +271,7 @@
 
     var stato = statoApertura();
     var h = '<div class="carrello-testa">' +
-      "<h2>Il tuo ordine</h2>" +
+      "<h2>" + T.titolo + "</h2>" +
       '<button type="button" class="carrello-chiudi" aria-label="Chiudi">✕</button></div>';
 
     if (!stato.aperto) {
@@ -212,7 +279,7 @@
     }
 
     if (!carrello.length) {
-      h += '<p class="carrello-vuoto">Il carrello è vuoto. Scegli dal menù qui accanto — i prezzi sono quelli del locale.</p>';
+      h += '<p class="carrello-vuoto">' + T.vuoto + '</p>';
       pannello.innerHTML = h;
       agganciaChiusura();
       return;
@@ -225,7 +292,7 @@
       h += '<li class="carrello-riga">' +
         '<div class="riga-testo"><span class="riga-nome">' + r.nome + "</span>" +
         (r.formato !== "unico" ? '<span class="riga-formato">' + r.formato + "</span>" : "") +
-        (r.integrale ? '<span class="riga-formato">integrale</span>' : "") +
+        (r.integrale ? '<span class="riga-formato">' + T.integrale + '</span>' : "") +
         '<span class="riga-prezzo">' + euro(unit) + " × " + r.qta + "</span></div>" +
         '<div class="riga-qta">' +
         '<button type="button" data-meno="' + k + '" aria-label="Togli uno">−</button>' +
@@ -236,30 +303,30 @@
     h += "</ul>";
 
     h += '<div class="carrello-modalita" role="radiogroup" aria-label="Come vuoi ricevere l\'ordine">' +
-      '<label><input type="radio" name="modalita" value="asporto" checked> Ritiro in pizzeria</label>' +
-      '<label><input type="radio" name="modalita" value="domicilio"> Consegna a domicilio (+' +
+      '<label><input type="radio" name="modalita" value="asporto" checked> ' + T.ritiro + '</label>' +
+      '<label><input type="radio" name="modalita" value="domicilio"> ' + T.domicilio +'
       euro(CFG.consegnaSupplemento) + ")</label></div>";
 
     h += '<div class="carrello-totali">' +
-      '<div class="tot-riga"><span>Piatti</span><span id="tot-piatti">' + euro(tot) + "</span></div>" +
-      '<div class="tot-riga" id="riga-consegna" hidden><span>Consegna</span><span>' + euro(CFG.consegnaSupplemento) + "</span></div>" +
-      '<div class="tot-riga tot-finale"><span>Totale</span><span id="tot-finale">' + euro(tot) + "</span></div></div>";
+      '<div class="tot-riga"><span>' + T.piattiRiga + '</span><span id="tot-piatti">' + euro(tot) + "</span></div>" +
+      '<div class="tot-riga" id="riga-consegna" hidden><span>' + T.consegna + '</span><span>' + euro(CFG.consegnaSupplemento) + "</span></div>" +
+      '<div class="tot-riga tot-finale"><span>' + T.totale + '</span><span id="tot-finale">' + euro(tot) + "</span></div></div>";
 
     h += '<form class="carrello-form" novalidate>' +
-      '<label>Nome e cognome<input type="text" name="nome" required autocomplete="name"></label>' +
-      '<label>Telefono<input type="tel" name="telefono" required autocomplete="tel" inputmode="tel"></label>' +
-      '<label class="campo-indirizzo" hidden>Indirizzo di consegna<input type="text" name="indirizzo" autocomplete="street-address"></label>' +
-      '<label>A che ora<input type="text" name="orario" placeholder="es. 20:00, oppure «prima possibile»"></label>' +
-      '<label>Note<textarea name="note" rows="2" placeholder="Allergie, citofono, preferenze sull\'impasto…"></textarea></label>' +
-      '<fieldset class="carrello-pagamento"><legend>Come vuoi pagare</legend>' +
+      '<label>' + T.nome + '<input type="text" name="nome" required autocomplete="name"></label>' +
+      '<label>' + T.telefono + '<input type="tel" name="telefono" required autocomplete="tel" inputmode="tel"></label>' +
+      '<label class="campo-indirizzo" hidden>' + T.indirizzo + '<input type="text" name="indirizzo" autocomplete="street-address"></label>' +
+      '<label>' + T.orario + '<input type="text" name="orario" placeholder="' + T.orarioSegno + '"></label>' +
+      '<label>' + T.note + '<textarea name="note" rows="2" placeholder="' + T.notePlaceholder + '"></textarea></label>' +
+      '<fieldset class="carrello-pagamento"><legend>' + T.pagamento + '</legend>' +
       '<p class="pag-intro">Concludi qui: paghi subito con carta, oppure alla consegna.</p>' +
-      '<label><input type="radio" name="pagamento" value="contanti" checked> Alla consegna o al ritiro</label>' +
+      '<label><input type="radio" name="pagamento" value="contanti" checked> ' + T.contanti + '</label>' +
       '<label class="pag-online"><input type="radio" name="pagamento" value="online"' +
-      (CFG.apiPagamenti ? "" : " disabled") + '> Online con carta' +
+      (CFG.apiPagamenti ? "" : " disabled") + '> ' + T.online + '' +
       (CFG.apiPagamenti ? "" : ' <span class="presto">— attivo a breve</span>') + "</label></fieldset>" +
       '<p class="carrello-allergeni">Allergie o intolleranze? Consulta la <a href="' + CFG.pdfAllergeni + '" target="_blank" rel="noopener">tabella allergeni</a> e scrivicelo nelle note: prima di confermare ti richiamiamo.</p>' +
       '<button type="submit" class="btn btn-primary btn-block btn-invia"' + (stato.aperto ? "" : " disabled") + ">" +
-      (stato.aperto ? "Concludi l'ordine" : "Ordini sospesi") + "</button>" +
+      (stato.aperto ? T.concludi : T.sospesi) + "</button>" +
       '<p class="carrello-nota"></p>' +
       "</form>";
 
@@ -307,12 +374,12 @@
       if (!btn || btn.disabled) return;
       var online = pannello.querySelector('input[name="pagamento"]:checked').value === "online";
       if (online) {
-        btn.textContent = "Concludi e paga " + euro(totaleRighe() +
+        btn.textContent = T.concludiPaga + euro(totaleRighe() +
           (pannello.querySelector('input[name="modalita"]:checked').value === "domicilio" ? CFG.consegnaSupplemento : 0));
-        nota.textContent = "Ti portiamo sulla pagina di pagamento sicura. A pagamento riuscito l'ordine è confermato.";
+        nota.textContent = T.notaCarta;
       } else {
-        btn.textContent = "Concludi l'ordine";
-        nota.textContent = "Inviamo l'ordine in pizzeria e ti confermiamo noi i tempi. Paghi alla consegna o al ritiro.";
+        btn.textContent = T.concludi;
+        nota.textContent = T.notaContanti;
       }
     }
     radioPag.forEach(function (r) { r.addEventListener("change", aggiornaEtichettaInvio); });
@@ -366,11 +433,11 @@
     if (problemi.length) {
       problemi.forEach(function (x) { mostraErroreCampo(x[0], x[1]); });
       problemi[0][0].focus();
-      mostraErrore("Controlla i campi segnalati qui sopra.");
+      mostraErrore(T.errCampi);
       return;
     }
     if (d.modalita === "domicilio" && !d.indirizzo) {
-      mostraErrore("Per la consegna a domicilio serve l'indirizzo.");
+      mostraErrore(T.errIndirizzo);
       return;
     }
 
@@ -392,7 +459,7 @@
     var btn = pannello.querySelector(".btn-invia");
     var testoPrima = btn.textContent;
     btn.disabled = true;
-    btn.textContent = "Invio in corso…";
+    btn.textContent = T.invio;
 
     fetch(CFG.apiPagamenti + "/ordine-contante", {
       method: "POST",
@@ -457,7 +524,7 @@
 
   function erroreTelefono(v) {
     var t = normalizzaTelefono(v);
-    if (!t) return "Serve il telefono: senza non possiamo confermarti l'ordine.";
+    if (!t) return T.errTelefonoVuoto;
     if (/[^0-9]/.test(t)) return "Il numero può contenere solo cifre (e prefisso +39).";
     if (t.length < 8 || t.length > 15) return "Il numero non sembra completo.";
     if (!/^[03]/.test(t)) return "Un numero italiano inizia con 3 (cellulare) o 0 (fisso).";
@@ -469,7 +536,7 @@
     if (!t) return null;                                   // vuoto = prima possibile
     if (/^(prima possibile|appena pronto|subito|asap)$/i.test(t)) return null;
     var m = t.match(/^([01]?\d|2[0-3])[:.]([0-5]\d)$/);
-    if (!m) return "Scrivi un orario tipo 20:00, oppure «prima possibile».";
+    if (!m) return T.errOrario;
     var minuti = parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
     var g = new Date().getDay();
     var fasce = [CFG.orari.pranzo, CFG.orari.cena];
@@ -477,14 +544,14 @@
       var f = fasce[i];
       if (f.giorni.indexOf(g) !== -1 && minuti >= minuti2(f.apre) && minuti <= minuti2(f.chiude)) return null;
     }
-    return "A quell'ora siamo chiusi. Pranzo 11:30–15:00 (lun–sab), cena 18:30–22:00.";
+    return T.errChiusi;
   }
 
   function minuti2(hhmm) { return minuti(hhmm); }
 
   function erroreNome(v) {
     var t = String(v).trim();
-    if (t.length < 2) return "Serve un nome per confermare l'ordine.";
+    if (t.length < 2) return T.errNome;
     if (t.length > 80) return "Nome troppo lungo.";
     return null;
   }
