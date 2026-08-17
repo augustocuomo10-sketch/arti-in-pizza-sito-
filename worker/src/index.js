@@ -188,8 +188,10 @@ export default {
         const esito = await avvisaPizzeria(env, dati);
         if (esito.inviato) {
           dati.avvisato = new Date().toISOString();
-          await salva(env, dati);
+          dati.consegnatoA = esito.consegnatiA + "/" + esito.totale;
         }
+        if (esito.falliti) dati.avvisiFalliti = esito.falliti;
+        await salva(env, dati);
 
         // L'ordine e' comunque valido e archiviato: se l'avviso non parte
         // lo diciamo al cliente, cosi' puo' chiamare invece di restare in dubbio.
