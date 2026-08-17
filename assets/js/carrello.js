@@ -49,13 +49,13 @@
     orario: "What time", orarioSegno: "e.g. 8:00 pm, or «as soon as possible»",
     note: "Notes", notePlaceholder: "Allergies, doorbell, dough preferences…",
     pagamento: "How would you like to pay",
-    pagIntro: "Finish here: pay now by card, or on delivery.",
-    contanti: "On delivery or pickup", online: "Card online",
+    pagIntro: "Finish here: pay now by card, or in cash on delivery.",
+    contanti: "Cash on delivery or pickup", online: "Card online",
     allergeni: "For allergies and intolerances see the ",
     allergeniLink: "allergen table (PDF)", allergeniFine: ", and tell us in the notes.",
     concludi: "Place the order", concludiPaga: "Pay ",
     sospesi: "Orders paused",
-    notaContanti: "We send the order to the pizzeria and confirm the timing. You pay on delivery or pickup.",
+    notaContanti: "We send the order to the pizzeria and confirm the timing. Please have cash ready: delivery and pickup are paid in cash.",
     notaCarta: "We'll take you to the secure payment page. Once paid, your order is confirmed.",
     chiudi: "Close", togli: "Remove one", metti: "Add one",
     errNome: "We need a name to confirm your order.",
@@ -78,13 +78,13 @@
     orario: "A che ora", orarioSegno: "es. 20:00, oppure «prima possibile»",
     note: "Note", notePlaceholder: "Allergie, citofono, preferenze sull'impasto…",
     pagamento: "Come vuoi pagare",
-    pagIntro: "' + T.pagIntro + '",
-    contanti: "Alla consegna o al ritiro", online: "Online con carta",
+    pagIntro: "Concludi qui: paghi subito con carta, oppure in contanti alla consegna.",
+    contanti: "In contanti alla consegna o al ritiro", online: "Online con carta",
     allergeni: "Per allergie e intolleranze consulta la ",
     allergeniLink: "tabella allergeni (PDF)", allergeniFine: ", e scrivilo nelle note.",
     concludi: "Concludi l'ordine", concludiPaga: "Concludi e paga ",
     sospesi: "Ordini sospesi",
-    notaContanti: "Inviamo l'ordine in pizzeria e ti confermiamo noi i tempi. Paghi alla consegna o al ritiro.",
+    notaContanti: "Inviamo l'ordine in pizzeria e ti confermiamo noi i tempi. Prepara i contanti: alla consegna e al ritiro si paga in contanti.",
     notaCarta: "Ti portiamo sulla pagina di pagamento sicura. A pagamento riuscito l'ordine è confermato.",
     chiudi: "Chiudi", togli: "Togli uno", metti: "Aggiungi uno",
     errNome: "Serve un nome per confermare l'ordine.",
@@ -408,7 +408,7 @@
     righe.push(d.modalita === "domicilio" ? "Consegna a domicilio" : "Ritiro in pizzeria");
     if (d.modalita === "domicilio") righe.push("Indirizzo: " + d.indirizzo);
     righe.push("Totale: " + euro(totaleRighe() + (d.modalita === "domicilio" ? CFG.consegnaSupplemento : 0)));
-    righe.push("Pagamento: " + (d.pagamento === "online" ? "online con carta" : "alla consegna/ritiro"));
+    righe.push("Pagamento: " + (d.pagamento === "online" ? "online con carta" : "IN CONTANTI alla consegna/ritiro"));
     righe.push("");
     righe.push("Nome: " + d.nome);
     righe.push("Telefono: " + d.telefono);

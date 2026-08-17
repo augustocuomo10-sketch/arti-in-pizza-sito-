@@ -7,7 +7,7 @@
 <meta name="description" content="Segui l'avanzamento del tuo ordine da Arti in Pizza, Como.">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0F2C46">
-<link rel="stylesheet" href="assets/css/styles.css?v=202608171615">
+<link rel="stylesheet" href="assets/css/styles.css?v=202608171622">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/icone/icona-180.png">
 <style>
@@ -122,7 +122,7 @@
       '<p class="lede">' + d.messaggio + "</p>" +
       '<div class="riquadro">' +
       "<strong>" + d.pezzi + (d.pezzi === 1 ? " piatto" : " piatti") + " · " + euro(d.totale) + "</strong>" +
-      " — " + (d.pagato ? "già pagato" : "da pagare " +
+      " — " + (d.pagato ? "già pagato online" : "da pagare <strong>in contanti</strong> " +
         (d.modalita === "domicilio" ? "alla consegna" : "al ritiro")) +
       '<div class="rif" style="margin-top:6px;">' + d.riferimento + "</div></div>" +
       '<ul class="passi">' + lista + "</ul>" +

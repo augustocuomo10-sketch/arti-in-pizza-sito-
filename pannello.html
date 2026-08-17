@@ -420,7 +420,7 @@
 
     var targa = pagato
       ? '<span class="targa pagato">Pagato</span>'
-      : (contanti ? '<span class="targa contanti">Da incassare</span>'
+      : (contanti ? '<span class="targa contanti">Contanti</span>'
                   : '<span class="targa attesa">Pagamento non concluso</span>');
 
     var modo = o.cliente.modalita === "domicilio"
@@ -443,7 +443,7 @@
       '<span class="quando">' + orario(o.creato) + "</span></div>" +
       '<ul class="piatti">' + piatti + "</ul>" +
       '<div class="totale">' + euro(o.totale) +
-      (pagato ? " <small>già incassato</small>" : " <small>da incassare</small>") + "</div>" +
+      (pagato ? " <small>già pagato online</small>" : " <small>da incassare in contanti</small>") + "</div>" +
       '<div class="chi">' +
       "<span>👤 " + scampa(o.cliente.nome) + "</span>" +
       '<span>📞 <a href="tel:' + scampa(o.cliente.telefono) + '">' + scampa(o.cliente.telefono) + "</a></span>" +

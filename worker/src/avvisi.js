@@ -47,7 +47,7 @@ export function componiMessaggio(dati) {
   righe.push("");
   righe.push(`<b>Totale: ${euro(o.totali.totale)}</b>` +
     (o.totali.consegna ? `  (${euro(o.totali.piatti)} + ${euro(o.totali.consegna)} consegna)` : ""));
-  righe.push(pagato ? "Già pagato online — non incassare." : "Da incassare alla consegna o al ritiro.");
+  righe.push(pagato ? "Già pagato online — non incassare." : "Da incassare IN CONTANTI alla consegna o al ritiro.");
 
   righe.push("");
   righe.push(`\u{1F464} ${pulito(o.cliente.nome)}`);
