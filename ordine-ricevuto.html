@@ -54,8 +54,13 @@
   function mostra(titolo, testo, classe) {
     box.className = "esito-ordine " + (classe || "");
     box.innerHTML = "<h1>" + titolo + "</h1><p class='lede'>" + testo + "</p>" +
-      "<div class='btn-row'><a class='btn btn-primary' href='menu.html'>Torna al menù</a>" +
-      "<a class='btn btn-outline' href='tel:031300809'>Chiamaci: 031 300809</a></div>";
+      "<div class='btn-row'>" +
+      (rif ? "<a class='btn btn-primary' href='segui-ordine.html?ref=" + encodeURIComponent(rif) +
+             "'>Segui il tuo ordine</a>" : "") +
+      "<a class='btn btn-outline' href='tel:031300809'>Chiamaci: 031 300809</a></div>" +
+      (rif ? "<p style='font-size:13.5px;color:var(--ink-soft);margin-top:14px;'>" +
+             "Salva questo link fra i preferiti: ti mostra a che punto è il tuo ordine, " +
+             "senza doverci chiamare.</p>" : "");
   }
 
   if (!rif) {

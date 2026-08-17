@@ -125,6 +125,26 @@
   }
   .rif{font-family:var(--dati); font-size:11px; color:var(--testo-tenue); margin-top:9px;}
 
+  .avanzamento{
+    display:flex; gap:7px; flex-wrap:wrap; margin-top:12px;
+    padding-top:12px; border-top:1px solid var(--filo);
+  }
+  .passo{
+    flex:1 1 auto; min-width:112px; text-align:center;
+    background:var(--fondo); color:var(--testo);
+    border:1px solid var(--filo); border-radius:9px;
+    padding:10px 8px; font-size:13.5px; font-weight:650;
+  }
+  .passo:hover{border-color:var(--blu); color:var(--blu);}
+  .passo.attuale{background:var(--blu); color:#fff; border-color:var(--blu);}
+  .passo.fatto{opacity:.45;}
+  .passo[disabled]{opacity:.4; cursor:default;}
+  .passo.annulla{flex:0 0 auto; min-width:0; color:var(--rosso); border-color:transparent; font-weight:600;}
+  .barra-stato{
+    font-size:12.5px; font-weight:700; color:var(--blu);
+    margin-top:9px; font-family:var(--dati); text-transform:uppercase; letter-spacing:.05em;
+  }
+
   .vuoto{text-align:center; color:var(--testo-tenue); padding:50px 20px; font-size:15px;}
   .errore{
     background:color-mix(in srgb,var(--rosso) 12%,transparent);
@@ -313,9 +333,68 @@
       (o.cliente.orario ? "<span>🕐 " + scampa(o.cliente.orario) + "</span>" : "") +
       (o.cliente.note ? '<span class="nota">📝 ' + scampa(o.cliente.note) + "</span>" : "") +
       "</div>" +
+      '<div class="barra-stato">Stato: ' + scampa(ETICHETTE[o.lavorazione] || "Ricevuto") + "</div>" +
+      tastiAvanzamento(o) +
       '<div class="rif">' + scampa(o.riferimento) + "</div>" +
       "</article>";
   }
+
+  // I passaggi dipendono dalla modalita': chi ritira non ha una consegna.
+  var ETICHETTE = {
+    ricevuto: "Ricevuto", in_preparazione: "In preparazione", pronto: "Pronto",
+    in_consegna: "In consegna", completato: "Completato", annullato: "Annullato"
+  };
+
+  function passiPer(modalita) {
+    return modalita === "domicilio"
+      ? ["ricevuto", "in_preparazione", "in_consegna", "completato"]
+      : ["ricevuto", "in_preparazione", "pronto", "completato"];
+  }
+
+  function tastiAvanzamento(o) {
+    if (o.lavorazione === "annullato") return "";
+    var passi = passiPer(o.cliente.modalita);
+    var attuale = passi.indexOf(o.lavorazione || "ricevuto");
+    var html = '<div class="avanzamento">';
+    passi.forEach(function (p, i) {
+      if (i === 0) return;                       // "ricevuto" e' lo stato iniziale, non un tasto
+      var classe = i === attuale ? "attuale" : (i < attuale ? "fatto" : "");
+      html += '<button class="passo ' + classe + '" data-rif="' + o.riferimento +
+        '" data-stato="' + p + '">' + ETICHETTE[p] + "</button>";
+    });
+    if (o.lavorazione !== "completato") {
+      html += '<button class="passo annulla" data-rif="' + o.riferimento +
+        '" data-stato="annullato">Annulla</button>';
+    }
+    return html + "</div>";
+  }
+
+  // Il cambio di stato lo decide il server: qui si chiede soltanto.
+  function cambiaStato(rif, stato, bottone) {
+    bottone.disabled = true;
+    fetch(API + "/stato-lavorazione", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: token, riferimento: rif, stato: stato })
+    })
+      .then(function (r) { return r.json().then(function (b) { return { stato: r.status, corpo: b }; }); })
+      .then(function (res) {
+        if (res.stato !== 200) throw new Error(res.corpo.errore || "non riuscito");
+        visti[rif] = true;
+        aggiorna();
+      })
+      .catch(function (e) {
+        bottone.disabled = false;
+        boxErrore.textContent = "Non riesco ad aggiornare lo stato: " + e.message;
+        boxErrore.hidden = false;
+      });
+  }
+
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest(".passo");
+    if (!b || b.disabled) return;
+    cambiaStato(b.getAttribute("data-rif"), b.getAttribute("data-stato"), b);
+  });
 
   // ----------------------------------------------------------- lettura
   function aggiorna() {

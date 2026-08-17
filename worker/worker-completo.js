@@ -866,6 +866,17 @@ const ORIGINI_AMMESSE = [
   "https://augustocuomo10-sketch.github.io"
 ];
 
+// Stati di lavorazione. L'ordine di questa lista e' anche l'ordine di
+// avanzamento mostrato al cliente: serve a non inventare passaggi a caso.
+const STATI = {
+  ricevuto:        { etichetta: "Ricevuto",        cliente: "Abbiamo ricevuto il tuo ordine." },
+  in_preparazione: { etichetta: "In preparazione", cliente: "Lo stiamo preparando." },
+  pronto:          { etichetta: "Pronto",          cliente: "È pronto: puoi venire a ritirarlo." },
+  in_consegna:     { etichetta: "In consegna",     cliente: "È partito: arriva a momenti." },
+  completato:      { etichetta: "Completato",      cliente: "Consegnato. Grazie!" },
+  annullato:       { etichetta: "Annullato",       cliente: "L'ordine è stato annullato. Ti abbiamo contattato." }
+};
+
 const MAX_CORPO = 16 * 1024;      // 16 KB: un ordine legittimo sta in molto meno
 const LIMITE_RICHIESTE = 12;      // per IP
 const FINESTRA_SECONDI = 300;     // in 5 minuti
@@ -1134,6 +1145,69 @@ export default {
       }
     }
 
+    // ------------------------------------------- avanzamento della lavorazione
+    if (url.pathname === "/stato-lavorazione" && richiesta.method === "POST") {
+      if (!env.PANNELLO_TOKEN) return json({ errore: "Non configurato." }, 503, origine);
+      if (!env.ORDINI) return json({ errore: "Archivio non disponibile." }, 503, origine);
+
+      let corpo;
+      try { corpo = await richiesta.json(); }
+      catch { return json({ errore: "Richiesta non leggibile." }, 400, origine); }
+
+      if (corpo.token !== env.PANNELLO_TOKEN) {
+        return json({ errore: "Non autorizzato." }, 401, origine);
+      }
+      if (!STATI[corpo.stato]) {
+        return json({ errore: "Stato non previsto." }, 400, origine);
+      }
+      if (!/^AIP-\d+-[a-f0-9]{8}$/.test(corpo.riferimento || "")) {
+        return json({ errore: "Riferimento non valido." }, 400, origine);
+      }
+
+      const salvato = await env.ORDINI.get(`ordine:${corpo.riferimento}`);
+      if (!salvato) return json({ errore: "Ordine non trovato." }, 404, origine);
+      const dati = JSON.parse(salvato);
+
+      // storico: serve a sapere chi ha fatto cosa e quando, non solo l'ultimo stato
+      dati.lavorazione = corpo.stato;
+      dati.storico = dati.storico || [];
+      dati.storico.push({ stato: corpo.stato, quando: new Date().toISOString() });
+      await env.ORDINI.put(`ordine:${corpo.riferimento}`, JSON.stringify(dati),
+        { expirationTtl: 60 * 60 * 24 * 30 });
+
+      return json({ riferimento: corpo.riferimento, lavorazione: corpo.stato }, 200, origine);
+    }
+
+    // --------------------------------------- avanzamento visibile al cliente
+    // Nessun token: il riferimento e' gia' impossibile da indovinare.
+    // Restituisce SOLO lo stato, mai i dati personali: il link puo' essere
+    // inoltrato senza esporre nome, telefono o indirizzo di nessuno.
+    if (url.pathname === "/avanzamento" && richiesta.method === "GET") {
+      const rif = url.searchParams.get("ref") || "";
+      if (!/^AIP-\d+-[a-f0-9]{8}$/.test(rif)) {
+        return json({ errore: "Riferimento non valido." }, 400, origine);
+      }
+      if (!env.ORDINI) return json({ errore: "Archivio non disponibile." }, 503, origine);
+
+      const salvato = await env.ORDINI.get(`ordine:${rif}`);
+      if (!salvato) return json({ errore: "Ordine non trovato." }, 404, origine);
+      const d = JSON.parse(salvato);
+      const lav = d.lavorazione || "ricevuto";
+
+      return json({
+        riferimento: rif,
+        lavorazione: lav,
+        etichetta: STATI[lav].etichetta,
+        messaggio: STATI[lav].cliente,
+        modalita: d.ordine.cliente.modalita,
+        pagato: d.stato === "pagato",
+        totale: d.attesoEuro,
+        pezzi: d.ordine.righe.reduce((s, r) => s + r.qta, 0),
+        creato: d.creato,
+        storico: d.storico || []
+      }, 200, origine);
+    }
+
     // ------------------------------------------------- elenco per il pannello
     if (url.pathname === "/ordini" && richiesta.method === "GET") {
       if (!env.PANNELLO_TOKEN || url.searchParams.get("token") !== env.PANNELLO_TOKEN) {
@@ -1152,6 +1226,7 @@ export default {
           creato: d.creato,
           pagamento: d.pagamento || "carta",
           stato: d.stato,
+          lavorazione: d.lavorazione || "ricevuto",
           totale: d.attesoEuro,
           cliente: d.ordine.cliente,
           righe: d.ordine.righe,

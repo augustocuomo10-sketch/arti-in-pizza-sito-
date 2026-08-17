@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Il tuo ordine — Arti in Pizza</title>
+<meta name="description" content="Segui l'avanzamento del tuo ordine da Arti in Pizza, Como.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0F2C46">
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/img/icone/icona-180.png">
+<style>
+  .passi{list-style:none; margin:26px 0 0; padding:0;}
+  .passo-cli{
+    display:grid; grid-template-columns:34px 1fr; gap:14px; align-items:start;
+    padding-bottom:22px; position:relative;
+  }
+  /* filo verticale che unisce i passaggi, tranne l'ultimo */
+  .passo-cli:not(:last-child)::before{
+    content:""; position:absolute; left:16px; top:30px; bottom:0; width:2px;
+    background:color-mix(in srgb, var(--ink) 14%, transparent);
+  }
+  .passo-cli.fatto:not(:last-child)::before{background:var(--green);}
+  .pallino{
+    width:34px; height:34px; border-radius:50%; display:grid; place-items:center;
+    font-size:15px; font-weight:700; z-index:1;
+    background:color-mix(in srgb, var(--ink) 10%, transparent); color:var(--ink-soft);
+  }
+  .passo-cli.fatto .pallino{background:var(--green); color:#fff;}
+  .passo-cli.attuale .pallino{
+    background:var(--blue); color:#fff;
+    box-shadow:0 0 0 5px color-mix(in srgb, var(--blue) 22%, transparent);
+  }
+  .passo-cli h3{margin:5px 0 2px; font-size:16.5px;}
+  .passo-cli.attesa h3{color:var(--ink-soft); font-weight:600;}
+  .passo-cli p{margin:0; font-size:14px; color:var(--ink-soft);}
+  .riquadro{
+    background:var(--cream-2); border-radius:16px; padding:20px 22px; margin-top:8px;
+  }
+  .riquadro .rif{font-family:ui-monospace,Menlo,monospace; font-size:12.5px; color:var(--ink-soft);}
+  .annullato{
+    background:color-mix(in srgb, var(--red) 12%, transparent);
+    border:1px solid color-mix(in srgb, var(--red) 40%, transparent);
+    border-radius:14px; padding:18px 20px;
+  }
+</style>
+</head>
+<body>
+<a href="#main" class="visually-hidden">Vai al contenuto</a>
+
+<header class="site-header texture-band">
+  <div class="wrap bar">
+    <a class="brandmark" href="index.html"><img class="brand-logo" src="assets/img/logo.png" alt="Arti in Pizza, dal 1997"></a>
+    <div class="header-actions">
+      <a class="btn btn-order" href="menu.html">Menù</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" style="padding-bottom:16px;">
+    <div class="wrap">
+      <span class="eyebrow">Como · Via Carloni 12</span>
+      <h1 style="font-size:clamp(28px,4.5vw,40px);">Il tuo ordine</h1>
+      <div id="contenuto" aria-live="polite">
+        <p class="lede">Un attimo…</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer texture-band">
+  <div class="wrap">
+    <div class="bottom"><span>© 2026 Arti in Pizza di Cuomo Vincenzo — 031 300809</span></div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var API = "https://bitter-firefly-4508.augusto-cuomo10.workers.dev";
+  var box = document.getElementById("contenuto");
+  var rif = new URLSearchParams(location.search).get("ref") || "";
+
+  var PASSI_RITIRO = [
+    ["ricevuto", "Ordine ricevuto", "L'abbiamo preso in carico."],
+    ["in_preparazione", "In preparazione", "Il tuo ordine è in lavorazione."],
+    ["pronto", "Pronto per il ritiro", "Ti aspettiamo in Via Carloni 12."],
+    ["completato", "Ritirato", "Grazie, alla prossima!"]
+  ];
+  var PASSI_CONSEGNA = [
+    ["ricevuto", "Ordine ricevuto", "L'abbiamo preso in carico."],
+    ["in_preparazione", "In preparazione", "Il tuo ordine è in lavorazione."],
+    ["in_consegna", "In consegna", "È partito: arriva a momenti."],
+    ["completato", "Consegnato", "Grazie, alla prossima!"]
+  ];
+
+  function euro(n) { return Number(n).toFixed(2).replace(".", ",") + " €"; }
+
+  function disegna(d) {
+    if (d.lavorazione === "annullato") {
+      box.innerHTML = '<div class="annullato"><h2 style="margin-top:0;">Ordine annullato</h2>' +
+        "<p style=\"margin-bottom:0;\">Questo ordine è stato annullato. Se non ti è chiaro il motivo, " +
+        'chiamaci allo <a href="tel:031300809">031 300809</a>: ti spieghiamo cosa è successo.</p></div>';
+      return;
+    }
+
+    var passi = d.modalita === "domicilio" ? PASSI_CONSEGNA : PASSI_RITIRO;
+    var attuale = 0;
+    passi.forEach(function (p, i) { if (p[0] === d.lavorazione) attuale = i; });
+
+    var lista = passi.map(function (p, i) {
+      var classe = i < attuale ? "fatto" : (i === attuale ? "attuale" : "attesa");
+      var segno = i < attuale ? "✓" : String(i + 1);
+      return '<li class="passo-cli ' + classe + '">' +
+        '<span class="pallino" aria-hidden="true">' + segno + "</span>" +
+        "<span><h3>" + p[1] + "</h3><p>" + (i <= attuale ? p[2] : "") + "</p></span></li>";
+    }).join("");
+
+    box.innerHTML =
+      '<p class="lede">' + d.messaggio + "</p>" +
+      '<div class="riquadro">' +
+      "<strong>" + d.pezzi + (d.pezzi === 1 ? " piatto" : " piatti") + " · " + euro(d.totale) + "</strong>" +
+      " — " + (d.pagato ? "già pagato" : "da pagare " +
+        (d.modalita === "domicilio" ? "alla consegna" : "al ritiro")) +
+      '<div class="rif" style="margin-top:6px;">' + d.riferimento + "</div></div>" +
+      '<ul class="passi">' + lista + "</ul>" +
+      '<p style="font-size:13.5px;color:var(--ink-soft);">Questa pagina si aggiorna da sola. ' +
+      'Per qualsiasi cosa: <a href="tel:031300809">031 300809</a>.</p>';
+  }
+
+  function leggi() {
+    if (!rif) {
+      box.innerHTML = '<p class="lede">Manca il riferimento dell\'ordine. ' +
+        'Apri il link che ti abbiamo dato a fine ordine, oppure chiamaci allo ' +
+        '<a href="tel:031300809">031 300809</a>.</p>';
+      return;
+    }
+    fetch(API + "/avanzamento?ref=" + encodeURIComponent(rif))
+      .then(function (r) {
+        if (r.status === 404) throw new Error("Non troviamo questo ordine.");
+        if (!r.ok) throw new Error("Non riusciamo a leggere lo stato in questo momento.");
+        return r.json();
+      })
+      .then(disegna)
+      .catch(function (e) {
+        box.innerHTML = '<p class="lede">' + e.message +
+          ' Chiamaci allo <a href="tel:031300809">031 300809</a>.</p>';
+      });
+  }
+
+  leggi();
+  setInterval(leggi, 30000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) leggi(); });
+})();
+</script>
+</body>
+</html>
