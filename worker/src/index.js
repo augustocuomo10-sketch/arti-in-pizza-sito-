@@ -369,15 +369,28 @@ export default {
       const d = JSON.parse(salvato);
       const lav = d.lavorazione || "ricevuto";
 
+      // Cosa esce da qui: stato, piatti, totale. Cosa NON esce: nome,
+      // telefono, indirizzo, note. Il link puo' essere inoltrato a chiunque
+      // senza esporre una sola informazione personale del cliente.
       return json({
         riferimento: rif,
         lavorazione: lav,
         etichetta: STATI[lav].etichetta,
         messaggio: STATI[lav].cliente,
         modalita: d.ordine.cliente.modalita,
+        pagamento: d.pagamento || "carta",
         pagato: d.stato === "pagato",
         totale: d.attesoEuro,
+        piatti: d.ordine.totali.piatti,
+        consegna: d.ordine.totali.consegna,
         pezzi: d.ordine.righe.reduce((s, r) => s + r.qta, 0),
+        righe: d.ordine.righe.map((r) => ({
+          nome: r.nome, formato: r.formato, integrale: r.integrale,
+          qta: r.qta, totale: r.totale
+        })),
+        orarioRichiesto: d.ordine.cliente.orario || "",
+        preordine: d.ordine.cliente.preordine === true,
+        minutiConsegna: (d.ordine.zona && d.ordine.zona.minuti) || null,
         creato: d.creato,
         storico: d.storico || []
       }, 200, origine);

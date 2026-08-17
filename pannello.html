@@ -118,6 +118,11 @@
   .totale small{font-weight:500; font-size:12.5px; color:var(--testo-tenue);}
 
   .chi{font-size:14.5px; display:flex; flex-direction:column; gap:3px;}
+  /* preordine per domani: non deve finire in forno stasera */
+  .chi .preordine{
+    background:#FFE9A8; color:#6B4A00; font-weight:800; border-radius:8px;
+    padding:4px 9px; align-self:flex-start; margin:2px 0;
+  }
   .chi a{color:var(--blu); font-weight:650; text-decoration:none;}
   .chi .nota{
     background:color-mix(in srgb,var(--ambra) 16%,transparent);
@@ -448,7 +453,11 @@
       "<span>👤 " + scampa(o.cliente.nome) + "</span>" +
       '<span>📞 <a href="tel:' + scampa(o.cliente.telefono) + '">' + scampa(o.cliente.telefono) + "</a></span>" +
       indirizzo +
-      (o.cliente.orario ? "<span>🕐 " + scampa(o.cliente.orario) + "</span>" : "") +
+      (o.cliente.orario
+        ? (o.cliente.preordine
+            ? '<span class="preordine">🕐 PREORDINE per le ' + scampa(o.cliente.orario) + "</span>"
+            : "<span>🕐 " + scampa(o.cliente.orario) + "</span>")
+        : "") +
       (o.cliente.note ? '<span class="nota">📝 ' + scampa(o.cliente.note) + "</span>" : "") +
       "</div>" +
       '<div class="barra-stato">Stato: ' + scampa(ETICHETTE[o.lavorazione] || "Ricevuto") + "</div>" +

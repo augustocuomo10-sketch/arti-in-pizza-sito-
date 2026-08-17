@@ -52,7 +52,11 @@ export function componiMessaggio(dati) {
   righe.push("");
   righe.push(`\u{1F464} ${pulito(o.cliente.nome)}`);
   righe.push(`\u{1F4DE} ${pulito(o.cliente.telefono)}`);
-  if (o.cliente.orario) righe.push(`\u{1F551} ${pulito(o.cliente.orario)}`);
+  if (o.cliente.orario) {
+    righe.push(o.cliente.preordine
+      ? `\u{1F551} <b>PREORDINE per le ${pulito(o.cliente.orario)}</b>`
+      : `\u{1F551} ${pulito(o.cliente.orario)}`);
+  }
   if (o.cliente.note) righe.push(`\u{1F4DD} <i>${pulito(o.cliente.note)}</i>`);
 
   righe.push("");

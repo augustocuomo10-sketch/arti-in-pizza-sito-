@@ -46,7 +46,7 @@
     ritiro: "Pick up in store", domicilio: "Home delivery (+",
     piattiRiga: "Items", consegna: "Delivery", totale: "Total",
     nome: "Full name", telefono: "Phone", indirizzo: "Delivery address",
-    orario: "What time", orarioSegno: "e.g. 8:00 pm, or «as soon as possible»",
+    orario: "What time", orarioSegno: "e.g. 20:00 (24h), or «as soon as possible»",
     note: "Notes", notePlaceholder: "Allergies, doorbell, dough preferences…",
     pagamento: "How would you like to pay",
     pagIntro: "Finish here: pay now by card, or in cash on delivery.",
@@ -62,11 +62,18 @@
     errTelefono: "That phone number doesn't look right: we need it to confirm.",
     errTelefonoVuoto: "We need your phone: without it we can't confirm the order.",
     errIndirizzo: "We need a full address for delivery.",
-    errOrario: "Write a time like 8:00 pm, or «as soon as possible».",
+    errOrario: "Write a time in 24-hour format, like 20:00, or «as soon as possible».",
     errChiusi: "We're closed at that time. Lunch 11:30am–3pm (Mon–Sat), dinner 6:30–10pm.",
     errCampi: "Please check the highlighted fields.",
     invio: "Sending…",
-    chiuso: "We're closed right now. Lunch 11:30am–3pm (Mon–Sat), dinner 6:30–10pm (every day). You can still build your order and send it when we open.",
+    chiuso: "We're closed right now — but you can pre-order: just tell us the time you want it, and we'll have it ready. Lunch 11:30am–3pm (Mon–Sat), dinner 6:30–10pm (every day).",
+    preordina: "Place pre-order",
+    preordinaPaga: "Pre-order and pay ",
+    notaPreordineContanti: "We're closed right now: we take the pre-order and have it ready for the time you gave us. Please have cash ready — delivery and pickup are paid in cash.",
+    notaPreordineCarta: "We're closed right now: you pay online and we have it ready for the time you gave us.",
+    orarioObbligatorio: "Required now: we're closed, so tell us when you want it",
+    errOrarioServe: "We're closed right now: write the time you'd like it in 24-hour format, for example 20:00.",
+    errOrarioPassato: "That time has already passed today: pick a later one.",
     integrale: "wholemeal"
   } : {
     apri: "Ordina", piatti1: " piatto", piattiN: " piatti",
@@ -95,7 +102,14 @@
     errChiusi: "A quell'ora siamo chiusi. Pranzo 11:30–15:00 (lun–sab), cena 18:30–22:00.",
     errCampi: "Controlla i campi segnalati qui sopra.",
     invio: "Invio in corso…",
-    chiuso: "Ora siamo chiusi. Pranzo 11:30–15:00 (lun–sab), cena 18:30–22:00 (tutti i giorni). Puoi comunque preparare l'ordine e inviarlo all'apertura.",
+    chiuso: "Ora siamo chiusi, ma puoi preordinare: indicaci l'orario in cui lo vuoi e lo troverai pronto. Pranzo 11:30–15:00 (lun–sab), cena 18:30–22:00 (tutti i giorni).",
+    preordina: "Invia il preordine",
+    preordinaPaga: "Preordina e paga ",
+    notaPreordineContanti: "Ora siamo chiusi: prendiamo il preordine e lo prepariamo per l'ora che ci hai indicato. Prepara i contanti: alla consegna e al ritiro si paga in contanti.",
+    notaPreordineCarta: "Ora siamo chiusi: paghi adesso online e lo prepariamo per l'ora che ci hai indicato.",
+    orarioObbligatorio: "Adesso obbligatorio: siamo chiusi, dicci quando lo vuoi",
+    errOrarioServe: "Ora siamo chiusi: scrivi l'orario in cui vuoi l'ordine, per esempio 20:00.",
+    errOrarioPassato: "Quell'ora di oggi è già passata: scegline una più avanti.",
     integrale: "integrale"
   };
 
@@ -130,9 +144,12 @@
         return { aperto: true, messaggio: "" };
       }
     }
+    // Chiusi adesso, ma non in ferie: l'ordine si accetta lo stesso purche'
+    // il cliente indichi un orario che cada in una fascia di servizio.
     return {
       aperto: false,
       chiusuraFerie: false,
+      preordinabile: true,
       messaggio: T.chiuso
     };
   }
@@ -319,7 +336,10 @@
       '<label>' + T.nome + '<input type="text" name="nome" required autocomplete="name"></label>' +
       '<label>' + T.telefono + '<input type="tel" name="telefono" required autocomplete="tel" inputmode="tel"></label>' +
       '<label class="campo-indirizzo" hidden>' + T.indirizzo + '<input type="text" name="indirizzo" autocomplete="street-address"></label>' +
-      '<label>' + T.orario + '<input type="text" name="orario" placeholder="' + T.orarioSegno + '"></label>' +
+      '<label' + (stato.preordinabile ? ' class="campo-preordine"' : "") + ">" + T.orario +
+      (stato.preordinabile ? '<small class="obbligo">' + T.orarioObbligatorio + "</small>" : "") +
+      '<input type="text" name="orario" placeholder="' + T.orarioSegno + '"' +
+      (stato.preordinabile ? " required" : "") + "></label>" +
       '<label>' + T.note + '<textarea name="note" rows="2" placeholder="' + T.notePlaceholder + '"></textarea></label>' +
       '<fieldset class="carrello-pagamento"><legend>' + T.pagamento + '</legend>' +
       '<p class="pag-intro">' + T.pagIntro + '</p>' +
@@ -328,8 +348,9 @@
       (CFG.apiPagamenti ? "" : " disabled") + '> ' + T.online + '' +
       (CFG.apiPagamenti ? "" : ' <span class="presto">— attivo a breve</span>') + "</label></fieldset>" +
       '<p class="carrello-allergeni">Allergie o intolleranze? Consulta la <a href="' + CFG.pdfAllergeni + '" target="_blank" rel="noopener">tabella allergeni</a> e scrivicelo nelle note: prima di confermare ti richiamiamo.</p>' +
-      '<button type="submit" class="btn btn-primary btn-block btn-invia"' + (stato.aperto ? "" : " disabled") + ">" +
-      (stato.aperto ? T.concludi : T.sospesi) + "</button>" +
+      '<button type="submit" class="btn btn-primary btn-block btn-invia"' +
+      (stato.aperto || stato.preordinabile ? "" : " disabled") + ">" +
+      (stato.aperto ? T.concludi : (stato.preordinabile ? T.preordina : T.sospesi)) + "</button>" +
       '<p class="carrello-nota"></p>' +
       "</form>";
 
@@ -376,13 +397,15 @@
       var nota = pannello.querySelector(".carrello-nota");
       if (!btn || btn.disabled) return;
       var online = pannello.querySelector('input[name="pagamento"]:checked').value === "online";
+      // a locale chiuso l'ordine e' un preordine: il pulsante deve dirlo
+      var pre = !statoApertura().aperto;
       if (online) {
-        btn.textContent = T.concludiPaga + euro(totaleRighe() +
+        btn.textContent = (pre ? T.preordinaPaga : T.concludiPaga) + euro(totaleRighe() +
           (pannello.querySelector('input[name="modalita"]:checked').value === "domicilio" ? CFG.consegnaSupplemento : 0));
-        nota.textContent = T.notaCarta;
+        nota.textContent = pre ? T.notaPreordineCarta : T.notaCarta;
       } else {
-        btn.textContent = T.concludi;
-        nota.textContent = T.notaContanti;
+        btn.textContent = pre ? T.preordina : T.concludi;
+        nota.textContent = pre ? T.notaPreordineContanti : T.notaContanti;
       }
     }
     radioPag.forEach(function (r) { r.addEventListener("change", aggiornaEtichettaInvio); });
@@ -534,23 +557,36 @@
     return null;
   }
 
-  function erroreOrario(v) {
-    var t = String(v).trim();
-    if (!t) return null;                                   // vuoto = prima possibile
-    if (/^(prima possibile|appena pronto|subito|asap)$/i.test(t)) return null;
-    var m = t.match(/^([01]?\d|2[0-3])[:.]([0-5]\d)$/);
-    if (!m) return T.errOrario;
-    var minuti = parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
-    var g = new Date().getDay();
+  // Il preordine e' sempre per la stessa giornata: l'ora deve essere ancora
+  // davanti e cadere in una fascia di servizio di oggi. Stessa identica regola
+  // del server, cosi' il cliente non si becca un rifiuto dopo aver inviato.
+  // Ritorna null se va bene, altrimenti il messaggio da mostrargli.
+  function problemaOrario(richiesti, adesso) {
+    var d = adesso || new Date();
+    var ora = d.getHours() * 60 + d.getMinutes();
+    if (richiesti < ora) return T.errOrarioPassato;
+
+    var g = d.getDay();
     var fasce = [CFG.orari.pranzo, CFG.orari.cena];
     for (var i = 0; i < fasce.length; i++) {
       var f = fasce[i];
-      if (f.giorni.indexOf(g) !== -1 && minuti >= minuti2(f.apre) && minuti <= minuti2(f.chiude)) return null;
+      if (f.giorni.indexOf(g) !== -1 &&
+          richiesti >= minuti(f.apre) && richiesti <= minuti(f.chiude)) return null;
     }
     return T.errChiusi;
   }
 
-  function minuti2(hhmm) { return minuti(hhmm); }
+  function erroreOrario(v) {
+    var t = String(v).trim();
+    var subito = /^(prima possibile|appena pronto|subito|asap)$/i.test(t);
+    if (!t || subito) {
+      // A locale chiuso "prima possibile" non vuol dire niente: serve un'ora.
+      return statoApertura().aperto ? null : T.errOrarioServe;
+    }
+    var m = t.match(/^([01]?\d|2[0-3])[:.]([0-5]\d)$/);
+    if (!m) return T.errOrario;
+    return problemaOrario(parseInt(m[1], 10) * 60 + parseInt(m[2], 10));
+  }
 
   function erroreNome(v) {
     var t = String(v).trim();
@@ -585,6 +621,26 @@
         if (el.getAttribute("aria-invalid") === "true") mostraErroreCampo(el, c[1](el.value));
       });
     });
+
+    // Conferma verde mentre scrive: l'orario e' valido, la pizza sara' pronta
+    // per quell'ora. Serve a togliere il dubbio prima di premere invia.
+    var campoOrario = pannello.querySelector('[name="orario"]');
+    if (campoOrario) {
+      var eco = document.createElement("span");
+      eco.className = "orario-eco";
+      campoOrario.closest("label").appendChild(eco);
+      var mostraQuando = function () {
+        var m = String(campoOrario.value).trim().match(/^([01]?\d|2[0-3])[:.]([0-5]\d)$/);
+        if (!m || problemaOrario(parseInt(m[1], 10) * 60 + parseInt(m[2], 10))) {
+          eco.textContent = "";
+          return;
+        }
+        var ora = (m[1].length === 1 ? "0" + m[1] : m[1]) + ":" + m[2];
+        eco.textContent = (EN ? "✓ Ready for " : "✓ Pronto per le ") + ora;
+      };
+      campoOrario.addEventListener("input", mostraQuando);
+      mostraQuando();
+    }
 
     // contatore per le note, il cui limite lato server e' 400
     var note = pannello.querySelector('[name="note"]');

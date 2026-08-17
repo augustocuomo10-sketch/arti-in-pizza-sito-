@@ -7,43 +7,131 @@
 <meta name="description" content="Segui l'avanzamento del tuo ordine da Arti in Pizza, Como.">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0F2C46">
-<link rel="stylesheet" href="assets/css/styles.css?v=202608171622">
+<link rel="stylesheet" href="assets/css/styles.css?v=202608171643">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/icone/icona-180.png">
 <style>
-  .passi{list-style:none; margin:26px 0 0; padding:0;}
-  .passo-cli{
-    display:grid; grid-template-columns:34px 1fr; gap:14px; align-items:start;
-    padding-bottom:22px; position:relative;
+  .segui{max-width:660px;}
+
+  /* ---- testata di stato: la prima cosa che il cliente cerca ---- */
+  .stato-testa{
+    display:flex; gap:18px; align-items:flex-start;
+    background:var(--cream-2); border-radius:20px; padding:24px;
+    border:1px solid color-mix(in srgb, var(--blue) 18%, transparent);
   }
-  /* filo verticale che unisce i passaggi, tranne l'ultimo */
-  .passo-cli:not(:last-child)::before{
-    content:""; position:absolute; left:16px; top:30px; bottom:0; width:2px;
-    background:color-mix(in srgb, var(--ink) 14%, transparent);
+  .stato-testa.finito{
+    background:color-mix(in srgb, var(--green) 12%, var(--cream));
+    border-color:color-mix(in srgb, var(--green) 42%, transparent);
   }
-  .passo-cli.fatto:not(:last-child)::before{background:var(--green);}
-  .pallino{
-    width:34px; height:34px; border-radius:50%; display:grid; place-items:center;
-    font-size:15px; font-weight:700; z-index:1;
-    background:color-mix(in srgb, var(--ink) 10%, transparent); color:var(--ink-soft);
-  }
-  .passo-cli.fatto .pallino{background:var(--green); color:#fff;}
-  .passo-cli.attuale .pallino{
+  .segno{
+    width:54px; height:54px; flex:none; border-radius:50%;
+    display:grid; place-items:center; font-size:25px;
     background:var(--blue); color:#fff;
-    box-shadow:0 0 0 5px color-mix(in srgb, var(--blue) 22%, transparent);
+    animation:respiro 2.6s ease-out infinite;
   }
-  .passo-cli h3{margin:5px 0 2px; font-size:16.5px;}
-  .passo-cli.attesa h3{color:var(--ink-soft); font-weight:600;}
-  .passo-cli p{margin:0; font-size:14px; color:var(--ink-soft);}
-  .riquadro{
-    background:var(--cream-2); border-radius:16px; padding:20px 22px; margin-top:8px;
+  .stato-testa.finito .segno{background:var(--green); animation:none;}
+  /* il cerchio respira finché l'ordine è in lavorazione: la pagina è viva */
+  @keyframes respiro{
+    0%{box-shadow:0 0 0 0 color-mix(in srgb, var(--blue) 42%, transparent);}
+    70%{box-shadow:0 0 0 15px color-mix(in srgb, var(--blue) 0%, transparent);}
+    100%{box-shadow:0 0 0 0 color-mix(in srgb, var(--blue) 0%, transparent);}
   }
-  .riquadro .rif{font-family:ui-monospace,Menlo,monospace; font-size:12.5px; color:var(--ink-soft);}
-  .annullato{
-    background:color-mix(in srgb, var(--red) 12%, transparent);
-    border:1px solid color-mix(in srgb, var(--red) 40%, transparent);
-    border-radius:14px; padding:18px 20px;
+  .stato-testa h2{margin:1px 0 5px; font-size:clamp(20px,3.4vw,26px);}
+  .stato-testa p{margin:0; font-size:15px; color:var(--ink-soft);}
+  .quando-atteso{
+    display:inline-block; margin-top:10px; padding:5px 12px; border-radius:999px;
+    background:#fff; border:1px solid var(--line);
+    font-size:13.5px; font-weight:700;
   }
+  .quando-atteso.preordine{background:#FFE9A8; border-color:#E0BE55; color:#6B4A00;}
+
+  .riga-viva{
+    display:flex; align-items:center; gap:7px; margin:12px 2px 0;
+    font-size:12.5px; color:var(--ink-soft);
+  }
+  .puntino{
+    width:8px; height:8px; border-radius:50%; background:var(--green); flex:none;
+    animation:battito 2s ease-in-out infinite;
+  }
+  @keyframes battito{0%,100%{opacity:1;}50%{opacity:.2;}}
+  @media (prefers-reduced-motion:reduce){.segno,.puntino{animation:none;}}
+
+  /* ---- scontrino: il cliente deve poter verificare cosa ha ordinato ---- */
+  .scontrino{
+    background:#fff; border:1px solid var(--line); border-radius:18px;
+    padding:20px 22px; margin-top:16px;
+  }
+  .scontrino h3{
+    font-family:"Archivo",sans-serif; font-size:12px; font-weight:700;
+    letter-spacing:.09em; text-transform:uppercase; color:var(--ink-soft);
+    margin:0 0 12px;
+  }
+  .voce{
+    display:flex; gap:12px; align-items:baseline; padding:8px 0;
+    border-bottom:1px solid color-mix(in srgb, var(--ink) 7%, transparent);
+  }
+  .voce:last-of-type{border-bottom:none;}
+  .voce .q{font-weight:800; min-width:32px; font-variant-numeric:tabular-nums;}
+  .voce .n{flex:1; font-weight:600;}
+  .voce .n small{display:block; font-size:12.5px; font-weight:500; color:var(--ink-soft);}
+  .voce .p{font-variant-numeric:tabular-nums; font-weight:600;}
+  .somme{margin-top:10px; padding-top:10px; border-top:1px solid var(--line);}
+  .somma{display:flex; justify-content:space-between; font-size:14px; padding:3px 0; color:var(--ink-soft);}
+  .somma.finale{
+    font-size:19px; font-weight:800; color:var(--ink); font-variant-numeric:tabular-nums;
+    padding-top:9px; margin-top:6px; border-top:1px solid var(--line);
+  }
+  .bollo{
+    display:block; margin-top:14px; border-radius:12px; padding:11px 14px;
+    font-size:13.5px; font-weight:700;
+  }
+  .bollo.pagato{background:color-mix(in srgb, var(--green) 15%, transparent); color:#14663f;}
+  .bollo.contanti{background:color-mix(in srgb, var(--azzurro) 34%, transparent); color:var(--blue-ink);}
+
+  /* ---- percorso ---- */
+  .percorso{list-style:none; margin:20px 0 0; padding:0;}
+  .tappa{
+    display:grid; grid-template-columns:32px 1fr auto; gap:14px; align-items:start;
+    padding-bottom:20px; position:relative;
+  }
+  .tappa:not(:last-child)::before{
+    content:""; position:absolute; left:15px; top:32px; bottom:0; width:2px;
+    background:color-mix(in srgb, var(--ink) 13%, transparent);
+  }
+  .tappa.fatta:not(:last-child)::before{background:var(--green);}
+  .bolla{
+    width:32px; height:32px; border-radius:50%; display:grid; place-items:center;
+    font-size:14px; font-weight:800; z-index:1;
+    background:color-mix(in srgb, var(--ink) 9%, transparent); color:var(--ink-soft);
+  }
+  .tappa.fatta .bolla{background:var(--green); color:#fff;}
+  .tappa.ora .bolla{background:var(--blue); color:#fff; box-shadow:0 0 0 5px color-mix(in srgb, var(--blue) 20%, transparent);}
+  .tappa h4{margin:5px 0 1px; font-size:16px; font-family:"Archivo",sans-serif; font-weight:700;}
+  .tappa.futura h4{color:var(--ink-soft); font-weight:600;}
+  .tappa p{margin:0; font-size:13.5px; color:var(--ink-soft);}
+  .ora-tappa{font-size:12.5px; color:var(--ink-soft); font-variant-numeric:tabular-nums; padding-top:7px;}
+
+  /* ---- appoggi finali ---- */
+  .appoggi{display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:12px; margin-top:18px;}
+  .appoggio{background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 16px;}
+  .appoggio strong{display:block; font-size:14.5px; margin-bottom:2px;}
+  .appoggio span{font-size:13px; color:var(--ink-soft);}
+  .rif{
+    font-family:ui-monospace,Menlo,monospace; font-size:12px; color:var(--ink-soft);
+    text-align:center; margin-top:18px;
+  }
+  .guaio{
+    background:color-mix(in srgb, var(--red) 10%, transparent);
+    border:1px solid color-mix(in srgb, var(--red) 36%, transparent);
+    border-radius:18px; padding:20px 22px;
+  }
+  .guaio h2{margin:0 0 6px; font-size:21px;}
+  .guaio p{margin:0; font-size:15px;}
+
+  /* caricamento: forme grigie, così la pagina non salta né lampeggia */
+  .scheletro{background:var(--cream-2); border-radius:18px; animation:pulsa 1.4s ease-in-out infinite;}
+  @keyframes pulsa{0%,100%{opacity:.5;}50%{opacity:.85;}}
+  @media (prefers-reduced-motion:reduce){.scheletro{animation:none;}}
 </style>
 </head>
 <body>
@@ -59,12 +147,13 @@
 </header>
 
 <main id="main">
-  <section class="hero" style="padding-bottom:16px;">
-    <div class="wrap">
+  <section class="hero" style="padding-bottom:44px;">
+    <div class="wrap segui">
       <span class="eyebrow">Como · Via Carloni 12</span>
-      <h1 style="font-size:clamp(28px,4.5vw,40px);">Il tuo ordine</h1>
+      <h1 style="font-size:clamp(26px,4.2vw,36px); margin-bottom:18px;">Il tuo ordine</h1>
       <div id="contenuto" aria-live="polite">
-        <p class="lede">Un attimo…</p>
+        <div class="scheletro" style="height:112px;"></div>
+        <div class="scheletro" style="height:186px; margin-top:16px;"></div>
       </div>
     </div>
   </section>
@@ -72,7 +161,7 @@
 
 <footer class="site-footer texture-band">
   <div class="wrap">
-    <div class="bottom"><span>© 2026 Arti in Pizza di Cuomo Vincenzo — 031 300809</span></div>
+    <div class="bottom"><span>© 2026 Arti in Pizza di Cuomo Vincenzo — Via Carloni 12, Como — 031 300809</span></div>
   </div>
 </footer>
 
@@ -83,70 +172,147 @@
   var box = document.getElementById("contenuto");
   var rif = new URLSearchParams(location.search).get("ref") || "";
 
-  var PASSI_RITIRO = [
-    ["ricevuto", "Ordine ricevuto", "L'abbiamo preso in carico."],
-    ["in_preparazione", "In preparazione", "Il tuo ordine è in lavorazione."],
-    ["pronto", "Pronto per il ritiro", "Ti aspettiamo in Via Carloni 12."],
-    ["completato", "Ritirato", "Grazie, alla prossima!"]
-  ];
-  var PASSI_CONSEGNA = [
-    ["ricevuto", "Ordine ricevuto", "L'abbiamo preso in carico."],
-    ["in_preparazione", "In preparazione", "Il tuo ordine è in lavorazione."],
-    ["in_consegna", "In consegna", "È partito: arriva a momenti."],
-    ["completato", "Consegnato", "Grazie, alla prossima!"]
-  ];
+  var PASSI = {
+    asporto: [
+      ["ricevuto", "🧾", "Ordine ricevuto", "L'abbiamo preso in carico."],
+      ["in_preparazione", "👨‍🍳", "In preparazione", "Il forno è acceso."],
+      ["pronto", "✅", "Pronto per il ritiro", "Ti aspettiamo in Via Carloni 12."],
+      ["completato", "🎉", "Ritirato", "Grazie, alla prossima!"]
+    ],
+    domicilio: [
+      ["ricevuto", "🧾", "Ordine ricevuto", "L'abbiamo preso in carico."],
+      ["in_preparazione", "👨‍🍳", "In preparazione", "Il forno è acceso."],
+      ["in_consegna", "🛵", "In consegna", "È partito: arriva a momenti."],
+      ["completato", "🎉", "Consegnato", "Grazie, alla prossima!"]
+    ]
+  };
 
   function euro(n) { return Number(n).toFixed(2).replace(".", ",") + " €"; }
+  function ora(iso) {
+    var d = new Date(iso);
+    if (isNaN(d)) return "";
+    return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+  }
+  function scampa(s) {
+    var d = document.createElement("div");
+    d.textContent = String(s == null ? "" : s);
+    return d.innerHTML;
+  }
+
+  function guaio(titolo, spiega) {
+    box.innerHTML = '<div class="guaio"><h2>' + titolo + "</h2><p>" + spiega +
+      ' Chiamaci allo <a href="tel:031300809">031 300809</a>.</p></div>' +
+      (rif ? '<p class="rif">' + scampa(rif) + "</p>" : "");
+  }
 
   function disegna(d) {
     if (d.lavorazione === "annullato") {
-      box.innerHTML = '<div class="annullato"><h2 style="margin-top:0;">Ordine annullato</h2>' +
-        "<p style=\"margin-bottom:0;\">Questo ordine è stato annullato. Se non ti è chiaro il motivo, " +
-        'chiamaci allo <a href="tel:031300809">031 300809</a>: ti spieghiamo cosa è successo.</p></div>';
+      guaio("Ordine annullato", "Questo ordine è stato annullato: non ti verrà addebitato nulla.");
       return;
     }
 
-    var passi = d.modalita === "domicilio" ? PASSI_CONSEGNA : PASSI_RITIRO;
+    var passi = PASSI[d.modalita === "domicilio" ? "domicilio" : "asporto"];
     var attuale = 0;
     passi.forEach(function (p, i) { if (p[0] === d.lavorazione) attuale = i; });
+    var finito = d.lavorazione === "completato";
 
-    var lista = passi.map(function (p, i) {
-      var classe = i < attuale ? "fatto" : (i === attuale ? "attuale" : "attesa");
-      var segno = i < attuale ? "✓" : String(i + 1);
-      return '<li class="passo-cli ' + classe + '">' +
-        '<span class="pallino" aria-hidden="true">' + segno + "</span>" +
-        "<span><h3>" + p[1] + "</h3><p>" + (i <= attuale ? p[2] : "") + "</p></span></li>";
-    }).join("");
+    // gli orari dei passaggi arrivano dallo storico tenuto dal server
+    var quando = {};
+    (d.storico || []).forEach(function (s) { quando[s.stato] = s.quando; });
+    quando.ricevuto = quando.ricevuto || d.creato;
 
-    box.innerHTML =
-      '<p class="lede">' + d.messaggio + "</p>" +
-      '<div class="riquadro">' +
-      "<strong>" + d.pezzi + (d.pezzi === 1 ? " piatto" : " piatti") + " · " + euro(d.totale) + "</strong>" +
-      " — " + (d.pagato ? "già pagato online" : "da pagare <strong>in contanti</strong> " +
-        (d.modalita === "domicilio" ? "alla consegna" : "al ritiro")) +
-      '<div class="rif" style="margin-top:6px;">' + d.riferimento + "</div></div>" +
-      '<ul class="passi">' + lista + "</ul>" +
-      '<p style="font-size:13.5px;color:var(--ink-soft);">Questa pagina si aggiorna da sola. ' +
-      'Per qualsiasi cosa: <a href="tel:031300809">031 300809</a>.</p>';
+    var atteso = "";
+    if (d.orarioRichiesto && !finito) {
+      atteso = '<span class="quando-atteso' + (d.preordine ? " preordine" : "") + '">🕐 ' +
+        (d.modalita === "domicilio" ? "Consegna" : "Ritiro") +
+        " alle " + scampa(d.orarioRichiesto) + "</span>";
+    }
+
+    var testa =
+      '<div class="stato-testa' + (finito ? " finito" : "") + '">' +
+      '<span class="segno" aria-hidden="true">' + passi[attuale][1] + "</span>" +
+      "<span><h2>" + passi[attuale][2] + "</h2><p>" + scampa(d.messaggio) + "</p>" +
+      atteso + "</span></div>" +
+      (finito ? "" :
+        '<p class="riga-viva"><span class="puntino" aria-hidden="true"></span>' +
+        "Aggiornato alle " + ora(new Date().toISOString()) + " · questa pagina si rinfresca da sola</p>");
+
+    // Se il server non manda il dettaglio (versione precedente dell'API)
+    // meglio la riga riassuntiva che uno scontrino vuoto.
+    var voci = !d.righe || !d.righe.length
+      ? '<div class="voce"><span class="q">' + (d.pezzi || 0) + "×</span>" +
+        '<span class="n">' + (d.pezzi === 1 ? "piatto" : "piatti") + "</span>" +
+        '<span class="p">' + euro(d.totale) + "</span></div>"
+      : d.righe.map(function (r) {
+          var sotto = [];
+          if (r.formato && r.formato !== "unico") sotto.push(scampa(r.formato));
+          if (r.integrale) sotto.push("integrale");
+          return '<div class="voce"><span class="q">' + Number(r.qta) + "×</span>" +
+            '<span class="n">' + scampa(r.nome) +
+            (sotto.length ? "<small>" + sotto.join(" · ") + "</small>" : "") + "</span>" +
+            '<span class="p">' + euro(r.totale) + "</span></div>";
+        }).join("");
+
+    var bollo = d.pagato
+      ? '<span class="bollo pagato">✓ Già pagato online — alla consegna non devi versare nulla.</span>'
+      : '<span class="bollo contanti">💵 Da pagare <strong>in contanti</strong> ' +
+        (d.modalita === "domicilio" ? "alla consegna" : "al ritiro") +
+        ": prepara " + euro(d.totale) + ".</span>";
+
+    var scontrino =
+      '<div class="scontrino"><h3>Cosa hai ordinato</h3>' + voci +
+      '<div class="somme">' +
+      (d.consegna
+        ? '<div class="somma"><span>Piatti</span><span>' + euro(d.piatti) + "</span></div>" +
+          '<div class="somma"><span>Consegna</span><span>' + euro(d.consegna) + "</span></div>"
+        : "") +
+      '<div class="somma finale"><span>Totale</span><span>' + euro(d.totale) + "</span></div>" +
+      "</div>" + bollo + "</div>";
+
+    var percorso = '<ul class="percorso">' + passi.map(function (p, i) {
+      var classe = i < attuale ? "fatta" : (i === attuale ? "ora" : "futura");
+      return '<li class="tappa ' + classe + '">' +
+        '<span class="bolla" aria-hidden="true">' + (i < attuale ? "✓" : i + 1) + "</span>" +
+        "<span><h4>" + p[2] + "</h4>" + (i <= attuale ? "<p>" + p[3] + "</p>" : "") + "</span>" +
+        '<span class="ora-tappa">' + (quando[p[0]] ? ora(quando[p[0]]) : "") + "</span></li>";
+    }).join("") + "</ul>";
+
+    var appoggi =
+      '<div class="appoggi">' +
+      '<div class="appoggio"><strong>Serve cambiare qualcosa?</strong>' +
+      '<span>Chiamaci prima che l\'ordine parta: <a href="tel:031300809">031 300809</a></span></div>' +
+      '<div class="appoggio"><strong>Dove siamo</strong>' +
+      '<span><a href="https://www.google.com/maps/search/?api=1&query=Arti+in+Pizza+Via+Carloni+12+Como" target="_blank" rel="noopener">Via Carloni 12, Como</a></span></div>' +
+      "</div>";
+
+    box.innerHTML = testa + scontrino + percorso + appoggi +
+      '<p class="rif">Riferimento ordine · ' + scampa(d.riferimento) + "</p>";
   }
 
   function leggi() {
     if (!rif) {
-      box.innerHTML = '<p class="lede">Manca il riferimento dell\'ordine. ' +
-        'Apri il link che ti abbiamo dato a fine ordine, oppure chiamaci allo ' +
-        '<a href="tel:031300809">031 300809</a>.</p>';
+      guaio("Manca il riferimento dell'ordine",
+        "Apri il link che ti abbiamo dato a fine ordine.");
       return;
     }
     fetch(API + "/avanzamento?ref=" + encodeURIComponent(rif))
       .then(function (r) {
-        if (r.status === 404) throw new Error("Non troviamo questo ordine.");
-        if (!r.ok) throw new Error("Non riusciamo a leggere lo stato in questo momento.");
+        if (r.status === 404) throw new Error("404");
+        if (!r.ok) throw new Error("rete");
         return r.json();
       })
       .then(disegna)
       .catch(function (e) {
-        box.innerHTML = '<p class="lede">' + e.message +
-          ' Chiamaci allo <a href="tel:031300809">031 300809</a>.</p>';
+        // se la pagina mostra già l'ordine, un aggiornamento fallito non deve
+        // cancellarlo: meglio dati di un minuto fa che una schermata di errore
+        if (box.querySelector(".scontrino")) return;
+        if (e.message === "404") {
+          guaio("Non troviamo questo ordine",
+            "Controlla il link, oppure potrebbe essere passato troppo tempo.");
+        } else {
+          guaio("Non riusciamo a leggere lo stato",
+            "È un problema di collegamento, il tuo ordine è al sicuro.");
+        }
       });
   }
 

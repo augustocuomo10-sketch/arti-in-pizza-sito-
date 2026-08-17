@@ -1,7 +1,9 @@
 // ============================================================================
 // API ordini Arti in Pizza — Worker unico, generato da worker/src/*.js
+// Non modificare qui: cambia i file in worker/src/ e rilancia costruisci.sh
 // ============================================================================
 
+// ----------------------------------------------------------------- src/catalogo.js
 // GENERATO da assets/data/menu.json - non modificare a mano.
 // Rigenera con: python3 worker/genera-catalogo.py
 const CATALOGO = {
@@ -402,9 +404,11 @@ const REGOLE = {
  }
 };
 
+// ----------------------------------------------------------------- src/verifiche.js
 // Condizioni di verifica dell'ordine.
 // Regola non negoziabile: nulla di quello che arriva dal browser e' attendibile.
 // I prezzi si ricalcolano SEMPRE dal catalogo del server.
+
 
 
 class ErroreVerifica extends Error {
@@ -452,23 +456,37 @@ const inMinuti = (hhmm) => {
   return parseInt(h, 10) * 60 + parseInt(m, 10);
 };
 
+const FASCE = () => [REGOLE.orari.pranzo, REGOLE.orari.cena];
+const ORARI_A_VOCE = "Pranzo 11:30–15:00 (lun–sab), cena 18:30–22:00 (tutti i giorni).";
+
 // chiusuraFino: data ISO (AAAA-MM-GG) fino a cui il locale resta chiuso.
 // Arriva dalla variabile CHIUSURA_FINO del pannello Cloudflare: si cambia
 // da li' senza ripubblicare il codice. Vuota o assente = nessuna chiusura.
-function verificaApertura(adesso, chiusuraFino) {
-  const o = oraItaliana(adesso);
+// Questa e' l'unica chiusura che blocca anche i preordini: se siamo in ferie
+// non ha senso accettare ordini nemmeno per domani.
+function verificaChiusuraFerie(adesso, chiusuraFino) {
   const fino = chiusuraFino === undefined ? REGOLE.chiusuraFino : chiusuraFino;
-  if (fino && o.data < fino) {
+  if (fino && oraItaliana(adesso).data < fino) {
     errore("chiuso_ferie",
       "Siamo chiusi in questo periodo: l'ordine non può essere accettato adesso. " +
       "Chiamaci allo 031 300809 per sapere quando riapriamo.");
   }
-  const fasce = [REGOLE.orari.pranzo, REGOLE.orari.cena];
-  const aperto = fasce.some(f =>
+  return true;
+}
+
+function apertoAdesso(adesso) {
+  const o = oraItaliana(adesso);
+  return FASCE().some(f =>
     f.giorni.includes(o.giorno) && o.minuti >= inMinuti(f.apre) && o.minuti < inMinuti(f.chiude));
-  if (!aperto) {
+}
+
+// Serve solo per gli ordini "prima possibile", che partono subito in cucina.
+function verificaApertura(adesso, chiusuraFino) {
+  verificaChiusuraFerie(adesso, chiusuraFino);
+  if (!apertoAdesso(adesso)) {
     errore("chiuso",
-      "In questo momento la pizzeria è chiusa. Pranzo 11:30–15:00 (lun–sab), cena 18:30–22:00 (tutti i giorni).");
+      "In questo momento la pizzeria è chiusa: puoi comunque preordinare, " +
+      "basta che indichi l'orario di ritiro o consegna. " + ORARI_A_VOCE);
   }
   return true;
 }
@@ -523,29 +541,40 @@ function verificaRighe(righe) {
 const arrotonda = (n) => Math.round(n * 100) / 100;
 
 
-// Orario richiesto dal cliente: vuoto o "prima possibile" vanno bene,
-// altrimenti deve essere un orario reale e dentro una fascia di servizio.
-// Senza questo controllo si potrebbe chiedere la consegna alle 3 di notte.
+// Orario richiesto dal cliente. Vuoto o "prima possibile" = ordine immediato,
+// che parte subito in cucina e quindi richiede il locale aperto.
+//
+// Un orario preciso e' invece un PREORDINE, sempre per la stessa giornata:
+// il cliente ordina mentre siamo chiusi (di mattina, o nel pomeriggio fra
+// pranzo e cena) per ritirare o farsi consegnare piu' tardi, quando siamo
+// aperti. L'ora indicata deve percio' essere ancora davanti e cadere dentro
+// una fascia di servizio di oggi. Senza questo controllo si potrebbe chiedere
+// la consegna alle 3 di notte, o per un'ora gia' passata.
 function verificaOrarioRichiesto(testo, adesso) {
   const t = String(testo || "").trim();
-  if (!t) return "";
-  if (/^(prima possibile|appena pronto|subito|asap)$/i.test(t)) return t;
+  if (!t) return { orario: "", fisso: false };
+  if (/^(prima possibile|appena pronto|subito|asap)$/i.test(t)) return { orario: t, fisso: false };
 
   const m = t.match(/^([01]?\d|2[0-3])[:.]([0-5]\d)$/);
   if (!m) {
     errore("orario_non_valido",
       "L'orario richiesto non e' leggibile: scrivi un orario tipo 20:00, oppure «prima possibile».");
   }
+  const hhmm = `${m[1].padStart(2, "0")}:${m[2]}`;
   const richiesti = parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
-  const giorno = oraItaliana(adesso).giorno;
-  const fasce = [REGOLE.orari.pranzo, REGOLE.orari.cena];
-  const dentro = fasce.some(f =>
-    f.giorni.includes(giorno) && richiesti >= inMinuti(f.apre) && richiesti <= inMinuti(f.chiude));
-  if (!dentro) {
-    errore("orario_fuori_servizio",
-      `Alle ${t} siamo chiusi. Pranzo 11:30-15:00 (lun-sab), cena 18:30-22:00 (tutti i giorni).`);
+  const o = oraItaliana(adesso);
+
+  if (richiesti < o.minuti) {
+    errore("orario_passato",
+      `Le ${hhmm} di oggi sono già passate: scegli un orario più avanti nella giornata. ${ORARI_A_VOCE}`);
   }
-  return t;
+  const inServizio = FASCE().some(f =>
+    f.giorni.includes(o.giorno) &&
+    richiesti >= inMinuti(f.apre) && richiesti <= inMinuti(f.chiude));
+  if (!inServizio) {
+    errore("orario_fuori_servizio", `Alle ${hhmm} siamo chiusi. ${ORARI_A_VOCE}`);
+  }
+  return { orario: hhmm, fisso: true };
 }
 
 // --------------------------------------------------------------- cliente
@@ -567,9 +596,16 @@ function verificaCliente(c, adesso) {
     if (indirizzo.length < 5) errore("indirizzo_mancante", "Per la consegna a domicilio serve un indirizzo completo.");
   }
 
+  const quando = verificaOrarioRichiesto(pulisci(c.orario || "", 40, "orario"), adesso);
+
   return {
     nome, telefono, modalita, indirizzo,
-    orario: verificaOrarioRichiesto(pulisci(c.orario || "", 40, "orario"), adesso),
+    orario: quando.orario,
+    // vero quando il cliente ha fissato un'ora precisa di oggi
+    orarioFisso: quando.fisso,
+    // vero quando quell'ordine e' arrivato a pizzeria chiusa: e' un preordine
+    // per piu' tardi, non qualcosa da mandare in forno adesso
+    preordine: quando.fisso && !apertoAdesso(adesso),
     note: pulisci(c.note || "", 400, "note")
   };
 }
@@ -593,13 +629,18 @@ function calcolaTotale(righe, modalita) {
 
 // Verifica completa. Ritorna l'ordine ricalcolato e attendibile.
 function verificaOrdine(corpo, adesso, chiusuraFino) {
-  verificaApertura(adesso, chiusuraFino);
+  verificaChiusuraFerie(adesso, chiusuraFino);
   const cliente = verificaCliente(corpo && corpo.cliente, adesso);
+  // Un ordine senza orario parte subito in cucina: quello richiede il locale
+  // aperto. Con un'ora precisa e' un preordine per piu' tardi nella stessa
+  // giornata, gia' verificata dentro le fasce: si accetta anche da chiusi.
+  if (!cliente.orarioFisso) verificaApertura(adesso, chiusuraFino);
   const righe = verificaRighe(corpo && corpo.righe);
   const totali = calcolaTotale(righe, cliente.modalita);
   return { cliente, righe, totali };
 }
 
+// ----------------------------------------------------------------- src/zona.js
 // Verifica della zona di consegna: massimo 11 minuti di guida dalla pizzeria.
 //
 // Perche' lato server: se il controllo stesse nel browser basterebbero gli
@@ -614,6 +655,7 @@ function verificaOrdine(corpo, adesso, chiusuraFino) {
 // Decisione concordata: se l'indirizzo non si colloca con certezza, la
 // consegna si BLOCCA e si invita a chiamare. Un ordine pagato e non
 // consegnabile costa piu' di una telefonata in piu'.
+
 
 
 const ZONA = {
@@ -733,122 +775,7 @@ async function verificaZonaConsegna(indirizzo, env) {
   };
 }
 
-// Avviso alla pizzeria: un ordine entra, il telefono suona.
-//
-// Perche' Telegram e non WhatsApp: per mandare un messaggio WhatsApp da un
-// server serve l'API ufficiale, con verifica Meta, modelli approvati e una
-// SIM che non puo' essere la stessa usata nell'app. Telegram fa la stessa
-// cosa in dieci minuti, gratis. Il giorno in cui WhatsApp sara' pronto,
-// cambia solo questa funzione: il resto del sistema non se ne accorge.
-//
-// Segreti attesi (pannello Cloudflare):
-//   TELEGRAM_TOKEN    token del bot, da @BotFather
-//   TELEGRAM_CHAT     una o piu' destinazioni separate da virgola: puo' essere
-//                     un gruppo (id negativo), una persona, o un misto.
-//                     Es. "-1001234567890,987654321"
-
-const euro = (n) => n.toFixed(2).replace(".", ",") + " €";
-
-// Telegram interpreta alcuni caratteri come formattazione: qui li neutralizziamo
-// perche' un cliente che si chiama "D'Angelo *Marco*" non deve rompere il messaggio.
-function pulito(s) {
-  return String(s || "").replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]));
-}
-
-function componiMessaggio(dati) {
-  const o = dati.ordine;
-  const pagato = dati.stato === "pagato";
-  const righe = [];
-
-  righe.push(pagato ? "✅ <b>ORDINE PAGATO</b>" : "\u{1F4B5} <b>NUOVO ORDINE — da incassare</b>");
-  righe.push("");
-
-  o.righe.forEach((r) => {
-    righe.push(`• ${r.qta}× <b>${pulito(r.nome)}</b>` +
-      (r.formato !== "unico" ? ` (${pulito(r.formato)})` : "") +
-      (r.integrale ? " [integrale]" : "") +
-      ` — ${euro(r.totale)}`);
-  });
-
-  righe.push("");
-  righe.push(o.cliente.modalita === "domicilio" ? "\u{1F6F5} <b>CONSEGNA A DOMICILIO</b>" : "\u{1F95F} <b>RITIRO IN PIZZERIA</b>");
-  if (o.cliente.modalita === "domicilio") {
-    righe.push(`\u{1F4CD} ${pulito(o.cliente.indirizzo)}`);
-    if (o.zona && o.zona.minuti !== null && o.zona.minuti !== undefined) {
-      righe.push(`   circa ${o.zona.minuti} min di guida`);
-    }
-  }
-
-  righe.push("");
-  righe.push(`<b>Totale: ${euro(o.totali.totale)}</b>` +
-    (o.totali.consegna ? `  (${euro(o.totali.piatti)} + ${euro(o.totali.consegna)} consegna)` : ""));
-  righe.push(pagato ? "Già pagato online — non incassare." : "Da incassare IN CONTANTI alla consegna o al ritiro.");
-
-  righe.push("");
-  righe.push(`\u{1F464} ${pulito(o.cliente.nome)}`);
-  righe.push(`\u{1F4DE} ${pulito(o.cliente.telefono)}`);
-  if (o.cliente.orario) righe.push(`\u{1F551} ${pulito(o.cliente.orario)}`);
-  if (o.cliente.note) righe.push(`\u{1F4DD} <i>${pulito(o.cliente.note)}</i>`);
-
-  righe.push("");
-  righe.push(`<code>${dati.riferimento}</code>`);
-
-  return righe.join("\n");
-}
-
-async function invia(token, destinazione, testo) {
-  try {
-    const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: destinazione,
-        text: testo,
-        parse_mode: "HTML",
-        disable_web_page_preview: true
-      })
-    });
-    if (r.ok) return { destinazione, ok: true };
-    const t = await r.text().catch(() => "");
-    return { destinazione, ok: false, motivo: `${r.status} ${t.slice(0, 100)}` };
-  } catch (e) {
-    return { destinazione, ok: false, motivo: String(e).slice(0, 100) };
-  }
-}
-
-// Non lancia mai: un avviso che fallisce non deve far perdere l'ordine,
-// che a quel punto e' gia' verificato e archiviato.
-//
-// Le destinazioni sono indipendenti: se il telefono di uno e' spento o ha
-// bloccato il bot, gli altri ricevono lo stesso. Basta che ne arrivi uno
-// perche' l'ordine si consideri annunciato.
-async function avvisaPizzeria(env, dati) {
-  if (!env.TELEGRAM_TOKEN || !env.TELEGRAM_CHAT) {
-    return { inviato: false, motivo: "canale di avviso non configurato" };
-  }
-
-  const destinazioni = String(env.TELEGRAM_CHAT)
-    .split(",").map((s) => s.trim()).filter(Boolean);
-  if (!destinazioni.length) {
-    return { inviato: false, motivo: "nessuna destinazione indicata" };
-  }
-
-  const testo = componiMessaggio(dati);
-  const esiti = await Promise.all(destinazioni.map((d) => invia(env.TELEGRAM_TOKEN, d, testo)));
-  const riusciti = esiti.filter((e) => e.ok);
-  const falliti = esiti.filter((e) => !e.ok);
-
-  return {
-    inviato: riusciti.length > 0,
-    consegnatiA: riusciti.length,
-    totale: destinazioni.length,
-    // i fallimenti si registrano: se un destinatario smette di ricevere,
-    // deve essere possibile accorgersene senza indovinare.
-    falliti: falliti.length ? falliti : undefined,
-    motivo: riusciti.length ? undefined : (falliti[0] && falliti[0].motivo)
-  };
-}
-
+// ----------------------------------------------------------------- src/push.js
 // Notifiche push: il server sveglia i telefoni della pizzeria anche a
 // pannello chiuso. Nessun intermediario da configurare — si parla
 // direttamente con i servizi push di Google e Apple.
@@ -990,6 +917,128 @@ async function registraDispositivo(env, iscrizione) {
   return chiave;
 }
 
+// ----------------------------------------------------------------- src/avvisi.js
+// Avviso alla pizzeria: un ordine entra, il telefono suona.
+//
+// Perche' Telegram e non WhatsApp: per mandare un messaggio WhatsApp da un
+// server serve l'API ufficiale, con verifica Meta, modelli approvati e una
+// SIM che non puo' essere la stessa usata nell'app. Telegram fa la stessa
+// cosa in dieci minuti, gratis. Il giorno in cui WhatsApp sara' pronto,
+// cambia solo questa funzione: il resto del sistema non se ne accorge.
+//
+// Segreti attesi (pannello Cloudflare):
+//   TELEGRAM_TOKEN    token del bot, da @BotFather
+//   TELEGRAM_CHAT     una o piu' destinazioni separate da virgola: puo' essere
+//                     un gruppo (id negativo), una persona, o un misto.
+//                     Es. "-1001234567890,987654321"
+
+const euro = (n) => n.toFixed(2).replace(".", ",") + " €";
+
+// Telegram interpreta alcuni caratteri come formattazione: qui li neutralizziamo
+// perche' un cliente che si chiama "D'Angelo *Marco*" non deve rompere il messaggio.
+function pulito(s) {
+  return String(s || "").replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]));
+}
+
+function componiMessaggio(dati) {
+  const o = dati.ordine;
+  const pagato = dati.stato === "pagato";
+  const righe = [];
+
+  righe.push(pagato ? "✅ <b>ORDINE PAGATO</b>" : "\u{1F4B5} <b>NUOVO ORDINE — da incassare</b>");
+  righe.push("");
+
+  o.righe.forEach((r) => {
+    righe.push(`• ${r.qta}× <b>${pulito(r.nome)}</b>` +
+      (r.formato !== "unico" ? ` (${pulito(r.formato)})` : "") +
+      (r.integrale ? " [integrale]" : "") +
+      ` — ${euro(r.totale)}`);
+  });
+
+  righe.push("");
+  righe.push(o.cliente.modalita === "domicilio" ? "\u{1F6F5} <b>CONSEGNA A DOMICILIO</b>" : "\u{1F95F} <b>RITIRO IN PIZZERIA</b>");
+  if (o.cliente.modalita === "domicilio") {
+    righe.push(`\u{1F4CD} ${pulito(o.cliente.indirizzo)}`);
+    if (o.zona && o.zona.minuti !== null && o.zona.minuti !== undefined) {
+      righe.push(`   circa ${o.zona.minuti} min di guida`);
+    }
+  }
+
+  righe.push("");
+  righe.push(`<b>Totale: ${euro(o.totali.totale)}</b>` +
+    (o.totali.consegna ? `  (${euro(o.totali.piatti)} + ${euro(o.totali.consegna)} consegna)` : ""));
+  righe.push(pagato ? "Già pagato online — non incassare." : "Da incassare IN CONTANTI alla consegna o al ritiro.");
+
+  righe.push("");
+  righe.push(`\u{1F464} ${pulito(o.cliente.nome)}`);
+  righe.push(`\u{1F4DE} ${pulito(o.cliente.telefono)}`);
+  if (o.cliente.orario) {
+    righe.push(o.cliente.preordine
+      ? `\u{1F551} <b>PREORDINE per le ${pulito(o.cliente.orario)}</b>`
+      : `\u{1F551} ${pulito(o.cliente.orario)}`);
+  }
+  if (o.cliente.note) righe.push(`\u{1F4DD} <i>${pulito(o.cliente.note)}</i>`);
+
+  righe.push("");
+  righe.push(`<code>${dati.riferimento}</code>`);
+
+  return righe.join("\n");
+}
+
+async function invia(token, destinazione, testo) {
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: destinazione,
+        text: testo,
+        parse_mode: "HTML",
+        disable_web_page_preview: true
+      })
+    });
+    if (r.ok) return { destinazione, ok: true };
+    const t = await r.text().catch(() => "");
+    return { destinazione, ok: false, motivo: `${r.status} ${t.slice(0, 100)}` };
+  } catch (e) {
+    return { destinazione, ok: false, motivo: String(e).slice(0, 100) };
+  }
+}
+
+// Non lancia mai: un avviso che fallisce non deve far perdere l'ordine,
+// che a quel punto e' gia' verificato e archiviato.
+//
+// Le destinazioni sono indipendenti: se il telefono di uno e' spento o ha
+// bloccato il bot, gli altri ricevono lo stesso. Basta che ne arrivi uno
+// perche' l'ordine si consideri annunciato.
+async function avvisaPizzeria(env, dati) {
+  if (!env.TELEGRAM_TOKEN || !env.TELEGRAM_CHAT) {
+    return { inviato: false, motivo: "canale di avviso non configurato" };
+  }
+
+  const destinazioni = String(env.TELEGRAM_CHAT)
+    .split(",").map((s) => s.trim()).filter(Boolean);
+  if (!destinazioni.length) {
+    return { inviato: false, motivo: "nessuna destinazione indicata" };
+  }
+
+  const testo = componiMessaggio(dati);
+  const esiti = await Promise.all(destinazioni.map((d) => invia(env.TELEGRAM_TOKEN, d, testo)));
+  const riusciti = esiti.filter((e) => e.ok);
+  const falliti = esiti.filter((e) => !e.ok);
+
+  return {
+    inviato: riusciti.length > 0,
+    consegnatiA: riusciti.length,
+    totale: destinazioni.length,
+    // i fallimenti si registrano: se un destinatario smette di ricevere,
+    // deve essere possibile accorgersene senza indovinare.
+    falliti: falliti.length ? falliti : undefined,
+    motivo: riusciti.length ? undefined : (falliti[0] && falliti[0].motivo)
+  };
+}
+
+// ----------------------------------------------------------------- src/index.js
 // API ordini Arti in Pizza — Cloudflare Worker
 //
 // Endpoint:
@@ -999,6 +1048,10 @@ async function registraDispositivo(env, iscrizione) {
 //
 // Segreti (wrangler secret put): SUMUP_API_KEY, SUMUP_MERCHANT_CODE
 // KV binding: ORDINI
+
+
+
+
 
 
 const ORIGINI_AMMESSE = [
@@ -1357,15 +1410,28 @@ export default {
       const d = JSON.parse(salvato);
       const lav = d.lavorazione || "ricevuto";
 
+      // Cosa esce da qui: stato, piatti, totale. Cosa NON esce: nome,
+      // telefono, indirizzo, note. Il link puo' essere inoltrato a chiunque
+      // senza esporre una sola informazione personale del cliente.
       return json({
         riferimento: rif,
         lavorazione: lav,
         etichetta: STATI[lav].etichetta,
         messaggio: STATI[lav].cliente,
         modalita: d.ordine.cliente.modalita,
+        pagamento: d.pagamento || "carta",
         pagato: d.stato === "pagato",
         totale: d.attesoEuro,
+        piatti: d.ordine.totali.piatti,
+        consegna: d.ordine.totali.consegna,
         pezzi: d.ordine.righe.reduce((s, r) => s + r.qta, 0),
+        righe: d.ordine.righe.map((r) => ({
+          nome: r.nome, formato: r.formato, integrale: r.integrale,
+          qta: r.qta, totale: r.totale
+        })),
+        orarioRichiesto: d.ordine.cliente.orario || "",
+        preordine: d.ordine.cliente.preordine === true,
+        minutiConsegna: (d.ordine.zona && d.ordine.zona.minuti) || null,
         creato: d.creato,
         storico: d.storico || []
       }, 200, origine);
@@ -1443,3 +1509,4 @@ export default {
     return json({ errore: "Endpoint inesistente." }, 404, origine);
   }
 };
+

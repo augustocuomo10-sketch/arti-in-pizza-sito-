@@ -1094,6 +1094,22 @@ body.carrello-aperto{overflow:hidden;}
   font-weight:600; color:var(--ink-soft);
 }
 .campo-contatore.al-limite{color:var(--red-ink);}
+
+/* preordine: a locale chiuso l'orario diventa il campo che regge tutto */
+.campo-preordine .obbligo{
+  display:block; margin:2px 0 5px; font-size:12px; font-weight:700;
+  color:var(--blue-ink); text-transform:none; letter-spacing:0;
+}
+.campo-preordine input{
+  border-color:color-mix(in srgb, var(--blue) 45%, transparent);
+  background:color-mix(in srgb, var(--azzurro) 16%, #fff);
+}
+/* eco sotto il campo: dice subito se l'ora cade oggi o domani */
+.orario-eco:empty{display:none;}
+.orario-eco{
+  display:block; margin-top:5px; font-size:12.5px; font-weight:700;
+  color:var(--green, #1f7a4d);
+}
 .carrello-pagamento .pag-intro{
   font-size:12.5px; color:var(--ink-soft); margin:0 0 8px;
 }

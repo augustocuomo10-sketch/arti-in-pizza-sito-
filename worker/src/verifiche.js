@@ -49,23 +49,37 @@ const inMinuti = (hhmm) => {
   return parseInt(h, 10) * 60 + parseInt(m, 10);
 };
 
+const FASCE = () => [REGOLE.orari.pranzo, REGOLE.orari.cena];
+const ORARI_A_VOCE = "Pranzo 11:30–15:00 (lun–sab), cena 18:30–22:00 (tutti i giorni).";
+
 // chiusuraFino: data ISO (AAAA-MM-GG) fino a cui il locale resta chiuso.
 // Arriva dalla variabile CHIUSURA_FINO del pannello Cloudflare: si cambia
 // da li' senza ripubblicare il codice. Vuota o assente = nessuna chiusura.
-export function verificaApertura(adesso, chiusuraFino) {
-  const o = oraItaliana(adesso);
+// Questa e' l'unica chiusura che blocca anche i preordini: se siamo in ferie
+// non ha senso accettare ordini nemmeno per domani.
+export function verificaChiusuraFerie(adesso, chiusuraFino) {
   const fino = chiusuraFino === undefined ? REGOLE.chiusuraFino : chiusuraFino;
-  if (fino && o.data < fino) {
+  if (fino && oraItaliana(adesso).data < fino) {
     errore("chiuso_ferie",
       "Siamo chiusi in questo periodo: l'ordine non può essere accettato adesso. " +
       "Chiamaci allo 031 300809 per sapere quando riapriamo.");
   }
-  const fasce = [REGOLE.orari.pranzo, REGOLE.orari.cena];
-  const aperto = fasce.some(f =>
+  return true;
+}
+
+export function apertoAdesso(adesso) {
+  const o = oraItaliana(adesso);
+  return FASCE().some(f =>
     f.giorni.includes(o.giorno) && o.minuti >= inMinuti(f.apre) && o.minuti < inMinuti(f.chiude));
-  if (!aperto) {
+}
+
+// Serve solo per gli ordini "prima possibile", che partono subito in cucina.
+export function verificaApertura(adesso, chiusuraFino) {
+  verificaChiusuraFerie(adesso, chiusuraFino);
+  if (!apertoAdesso(adesso)) {
     errore("chiuso",
-      "In questo momento la pizzeria è chiusa. Pranzo 11:30–15:00 (lun–sab), cena 18:30–22:00 (tutti i giorni).");
+      "In questo momento la pizzeria è chiusa: puoi comunque preordinare, " +
+      "basta che indichi l'orario di ritiro o consegna. " + ORARI_A_VOCE);
   }
   return true;
 }
@@ -120,29 +134,40 @@ export function verificaRighe(righe) {
 const arrotonda = (n) => Math.round(n * 100) / 100;
 
 
-// Orario richiesto dal cliente: vuoto o "prima possibile" vanno bene,
-// altrimenti deve essere un orario reale e dentro una fascia di servizio.
-// Senza questo controllo si potrebbe chiedere la consegna alle 3 di notte.
+// Orario richiesto dal cliente. Vuoto o "prima possibile" = ordine immediato,
+// che parte subito in cucina e quindi richiede il locale aperto.
+//
+// Un orario preciso e' invece un PREORDINE, sempre per la stessa giornata:
+// il cliente ordina mentre siamo chiusi (di mattina, o nel pomeriggio fra
+// pranzo e cena) per ritirare o farsi consegnare piu' tardi, quando siamo
+// aperti. L'ora indicata deve percio' essere ancora davanti e cadere dentro
+// una fascia di servizio di oggi. Senza questo controllo si potrebbe chiedere
+// la consegna alle 3 di notte, o per un'ora gia' passata.
 function verificaOrarioRichiesto(testo, adesso) {
   const t = String(testo || "").trim();
-  if (!t) return "";
-  if (/^(prima possibile|appena pronto|subito|asap)$/i.test(t)) return t;
+  if (!t) return { orario: "", fisso: false };
+  if (/^(prima possibile|appena pronto|subito|asap)$/i.test(t)) return { orario: t, fisso: false };
 
   const m = t.match(/^([01]?\d|2[0-3])[:.]([0-5]\d)$/);
   if (!m) {
     errore("orario_non_valido",
       "L'orario richiesto non e' leggibile: scrivi un orario tipo 20:00, oppure «prima possibile».");
   }
+  const hhmm = `${m[1].padStart(2, "0")}:${m[2]}`;
   const richiesti = parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
-  const giorno = oraItaliana(adesso).giorno;
-  const fasce = [REGOLE.orari.pranzo, REGOLE.orari.cena];
-  const dentro = fasce.some(f =>
-    f.giorni.includes(giorno) && richiesti >= inMinuti(f.apre) && richiesti <= inMinuti(f.chiude));
-  if (!dentro) {
-    errore("orario_fuori_servizio",
-      `Alle ${t} siamo chiusi. Pranzo 11:30-15:00 (lun-sab), cena 18:30-22:00 (tutti i giorni).`);
+  const o = oraItaliana(adesso);
+
+  if (richiesti < o.minuti) {
+    errore("orario_passato",
+      `Le ${hhmm} di oggi sono già passate: scegli un orario più avanti nella giornata. ${ORARI_A_VOCE}`);
   }
-  return t;
+  const inServizio = FASCE().some(f =>
+    f.giorni.includes(o.giorno) &&
+    richiesti >= inMinuti(f.apre) && richiesti <= inMinuti(f.chiude));
+  if (!inServizio) {
+    errore("orario_fuori_servizio", `Alle ${hhmm} siamo chiusi. ${ORARI_A_VOCE}`);
+  }
+  return { orario: hhmm, fisso: true };
 }
 
 // --------------------------------------------------------------- cliente
@@ -164,9 +189,16 @@ export function verificaCliente(c, adesso) {
     if (indirizzo.length < 5) errore("indirizzo_mancante", "Per la consegna a domicilio serve un indirizzo completo.");
   }
 
+  const quando = verificaOrarioRichiesto(pulisci(c.orario || "", 40, "orario"), adesso);
+
   return {
     nome, telefono, modalita, indirizzo,
-    orario: verificaOrarioRichiesto(pulisci(c.orario || "", 40, "orario"), adesso),
+    orario: quando.orario,
+    // vero quando il cliente ha fissato un'ora precisa di oggi
+    orarioFisso: quando.fisso,
+    // vero quando quell'ordine e' arrivato a pizzeria chiusa: e' un preordine
+    // per piu' tardi, non qualcosa da mandare in forno adesso
+    preordine: quando.fisso && !apertoAdesso(adesso),
     note: pulisci(c.note || "", 400, "note")
   };
 }
@@ -190,8 +222,12 @@ export function calcolaTotale(righe, modalita) {
 
 // Verifica completa. Ritorna l'ordine ricalcolato e attendibile.
 export function verificaOrdine(corpo, adesso, chiusuraFino) {
-  verificaApertura(adesso, chiusuraFino);
+  verificaChiusuraFerie(adesso, chiusuraFino);
   const cliente = verificaCliente(corpo && corpo.cliente, adesso);
+  // Un ordine senza orario parte subito in cucina: quello richiede il locale
+  // aperto. Con un'ora precisa e' un preordine per piu' tardi nella stessa
+  // giornata, gia' verificata dentro le fasce: si accetta anche da chiusi.
+  if (!cliente.orarioFisso) verificaApertura(adesso, chiusuraFino);
   const righe = verificaRighe(corpo && corpo.righe);
   const totali = calcolaTotale(righe, cliente.modalita);
   return { cliente, righe, totali };
