@@ -40,7 +40,7 @@ self.addEventListener("push", function (e) {
       tag: "ordine",              // niente valanghe: le notifiche si accorpano
       renotify: true,
       requireInteraction: true,   // resta finché non la si guarda
-      vibrate: [200, 100, 200, 100, 200],
+      vibrate: [400, 150, 400, 150, 400, 150, 400],
       data: { url: "/pannello.html" }
     })
   );

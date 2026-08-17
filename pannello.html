@@ -145,6 +145,27 @@
     margin-top:9px; font-family:var(--dati); text-transform:uppercase; letter-spacing:.05em;
   }
 
+  /* avviso invadente: deve farsi notare da dall'altra parte del locale */
+  .allarme{
+    position:fixed; inset:0; z-index:100; display:none;
+    background:rgba(224,57,42,.96); color:#fff;
+    flex-direction:column; align-items:center; justify-content:center;
+    gap:22px; padding:28px; text-align:center;
+    animation:lampeggia 1s steps(1) infinite;
+  }
+  .allarme.acceso{display:flex;}
+  @keyframes lampeggia{
+    0%,49%{background:rgba(224,57,42,.96);}
+    50%,100%{background:rgba(160,30,20,.96);}
+  }
+  @media (prefers-reduced-motion:reduce){.allarme{animation:none;}}
+  .allarme .quanti{font-size:clamp(46px,17vw,86px); font-weight:800; line-height:1;}
+  .allarme .dicitura{font-size:20px; font-weight:700;}
+  .allarme button{
+    background:#fff; color:var(--rosso); border:none; border-radius:14px;
+    padding:20px 40px; font-size:20px; font-weight:800; min-width:220px;
+  }
+
   .vuoto{text-align:center; color:var(--testo-tenue); padding:50px 20px; font-size:15px;}
   .errore{
     background:color-mix(in srgb,var(--rosso) 12%,transparent);
@@ -161,6 +182,12 @@
   <button class="btn" id="notifiche" type="button">📲 Notifiche</button>
   <button class="btn" id="suono" type="button">🔔 Suono: off</button>
 </header>
+
+<div class="allarme" id="allarme" role="alertdialog" aria-live="assertive">
+  <div class="quanti" id="allarmeQuanti">1</div>
+  <div class="dicitura" id="allarmeTesto">nuovo ordine</div>
+  <button type="button" id="fermaAllarme">Ho visto</button>
+</div>
 
 <main>
   <div id="accesso" class="accesso" hidden>
@@ -274,25 +301,83 @@
       try {
         ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
         if (ctx.state === "suspended") ctx.resume();
-        suona();
+        squillo();
+        tieniAcceso();
       } catch (e) {}
     }
   });
 
-  function suona() {
-    if (!suonoAcceso || !ctx) return;
-    [0, 180, 360].forEach(function (ritardo) {
-      setTimeout(function () {
-        var o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = "sine"; o.frequency.value = 880;
-        g.gain.setValueAtTime(0.0001, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.35, ctx.currentTime + 0.02);
-        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.28);
-        o.connect(g); g.connect(ctx.destination);
-        o.start(); o.stop(ctx.currentTime + 0.3);
-      }, ritardo);
-    });
+  function trillo(frequenza, ritardo, durata) {
+    setTimeout(function () {
+      if (!ctx) return;
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "square";                       // piu' penetrante di una sinusoide
+      o.frequency.value = frequenza;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.5, ctx.currentTime + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + durata);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + durata + 0.02);
+    }, ritardo);
   }
+
+  // Una sequenza sola: due note alternate, come una sveglia.
+  function squillo() {
+    if (!suonoAcceso || !ctx) return;
+    [0, 260, 520, 780].forEach(function (r, i) {
+      trillo(i % 2 ? 700 : 990, r, 0.2);
+    });
+    if (navigator.vibrate) navigator.vibrate([300, 120, 300, 120, 300]);
+  }
+
+  // L'allarme si ripete finche' qualcuno non lo ferma. Si spegne da solo
+  // dopo tre minuti: se nessuno ha risposto, continuare non serve a niente
+  // e diventa solo un fastidio per i clienti in sala.
+  var timerAllarme = null, finoA = 0, inArrivo = 0;
+
+  function accendiAllarme(quanti) {
+    inArrivo += quanti;
+    document.getElementById("allarmeQuanti").textContent = inArrivo;
+    document.getElementById("allarmeTesto").textContent =
+      inArrivo === 1 ? "nuovo ordine" : "nuovi ordini";
+    document.getElementById("allarme").classList.add("acceso");
+    finoA = Date.now() + 3 * 60 * 1000;
+    if (timerAllarme) return;
+    squillo();
+    timerAllarme = setInterval(function () {
+      if (Date.now() > finoA) { spegniAllarme(); return; }
+      squillo();
+    }, 2200);
+  }
+
+  function spegniAllarme() {
+    if (timerAllarme) { clearInterval(timerAllarme); timerAllarme = null; }
+    inArrivo = 0;
+    document.getElementById("allarme").classList.remove("acceso");
+    if (navigator.vibrate) navigator.vibrate(0);
+    document.title = "Ordini — Arti in Pizza";
+  }
+
+  document.getElementById("fermaAllarme").addEventListener("click", spegniAllarme);
+
+  // compatibilita' con il resto del codice, che chiama ancora suona()
+  function suona() { squillo(); }
+
+  // Schermo sempre acceso mentre il pannello e' aperto: durante il servizio
+  // nessuno ha le mani libere per risvegliare un tablet.
+  var vegliaSchermo = null;
+  function tieniAcceso() {
+    if (!("wakeLock" in navigator)) return;
+    navigator.wakeLock.request("screen")
+      .then(function (v) {
+        vegliaSchermo = v;
+        v.addEventListener("release", function () { vegliaSchermo = null; });
+      })
+      .catch(function () { /* negato o non disponibile: pazienza */ });
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && !vegliaSchermo) tieniAcceso();
+  });
 
   // ------------------------------------------------------------ disegno
   function euro(n) { return Number(n).toFixed(2).replace(".", ",") + " €"; }
@@ -529,8 +614,8 @@
           : '<p class="vuoto">Nessun ordine per ora.<br>La pagina si aggiorna da sola ogni 20 secondi.</p>';
 
         if (arrivati.length && !primaLettura) {
-          suona();
-          if (document.hidden) document.title = "(" + arrivati.length + ") Ordini";
+          accendiAllarme(arrivati.length);
+          document.title = "(" + arrivati.length + ") Ordini";
         }
         ordini.forEach(function (o) { visti[o.riferimento] = true; });
         primaLettura = false;
