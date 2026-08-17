@@ -304,7 +304,7 @@
 
     h += '<div class="carrello-modalita" role="radiogroup" aria-label="Come vuoi ricevere l\'ordine">' +
       '<label><input type="radio" name="modalita" value="asporto" checked> ' + T.ritiro + '</label>' +
-      '<label><input type="radio" name="modalita" value="domicilio"> ' + T.domicilio +'
+      '<label><input type="radio" name="modalita" value="domicilio"> ' + T.domicilio +
       euro(CFG.consegnaSupplemento) + ")</label></div>";
 
     h += '<div class="carrello-totali">' +
