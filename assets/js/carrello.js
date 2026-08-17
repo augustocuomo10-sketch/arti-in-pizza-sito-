@@ -99,6 +99,9 @@
     integrale: "integrale"
   };
 
+  var FORMATI_EN = { Classica: "Classic", Ruota: "Ruota", unico: "" };
+  function mostraFormato(f) { return EN ? (FORMATI_EN[f] !== undefined ? FORMATI_EN[f] : f) : f; }
+
   var CHIAVE = "aip_carrello_v1";
   var carrello = [];
 
@@ -202,7 +205,7 @@
         b.setAttribute("aria-label",
           T.aggiungi + " " + nome + (p.formato !== "unico" ? " formato " + p.formato : "") + " al carrello");
         b.innerHTML = '<span aria-hidden="true">+</span> ' +
-          (p.formato === "unico" ? T.aggiungi : p.formato);
+          (p.formato === "unico" ? T.aggiungi : mostraFormato(p.formato));
         b.addEventListener("click", function () {
           aggiungi({
             id: id, nome: nome, formato: p.formato, prezzo: p.prezzo, qta: 1,
@@ -291,7 +294,7 @@
       var k = rigaChiave(r);
       h += '<li class="carrello-riga">' +
         '<div class="riga-testo"><span class="riga-nome">' + r.nome + "</span>" +
-        (r.formato !== "unico" ? '<span class="riga-formato">' + r.formato + "</span>" : "") +
+        (r.formato !== "unico" ? '<span class="riga-formato">' + mostraFormato(r.formato) + "</span>" : "") +
         (r.integrale ? '<span class="riga-formato">' + T.integrale + '</span>' : "") +
         '<span class="riga-prezzo">' + euro(unit) + " × " + r.qta + "</span></div>" +
         '<div class="riga-qta">' +
@@ -319,7 +322,7 @@
       '<label>' + T.orario + '<input type="text" name="orario" placeholder="' + T.orarioSegno + '"></label>' +
       '<label>' + T.note + '<textarea name="note" rows="2" placeholder="' + T.notePlaceholder + '"></textarea></label>' +
       '<fieldset class="carrello-pagamento"><legend>' + T.pagamento + '</legend>' +
-      '<p class="pag-intro">Concludi qui: paghi subito con carta, oppure alla consegna.</p>' +
+      '<p class="pag-intro">' + T.pagIntro + '</p>' +
       '<label><input type="radio" name="pagamento" value="contanti" checked> ' + T.contanti + '</label>' +
       '<label class="pag-online"><input type="radio" name="pagamento" value="online"' +
       (CFG.apiPagamenti ? "" : " disabled") + '> ' + T.online + '' +
