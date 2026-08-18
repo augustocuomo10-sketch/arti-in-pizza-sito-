@@ -1216,3 +1216,62 @@ body.carrello-aperto{overflow:hidden;}
   .passo-o, .passo-o .num{animation:none;}
   .passo-o .num{background:var(--blue); color:#fff;}
 }
+
+/* ============================================================ pagine legali
+   Testi lunghi da leggere, non da scorrere: colonna stretta, gerarchia
+   piatta, niente decorazioni che distraggano da quello che c'e' scritto. */
+.legale{max-width:none;}
+.legale .colonna{max-width:720px;}
+.legale h2{
+  font-size:clamp(20px,3vw,25px); margin:38px 0 10px;
+  padding-top:22px; border-top:1px solid var(--line);
+}
+.legale h2:first-of-type{border-top:none; padding-top:0; margin-top:26px;}
+.legale h3{font-size:17.5px; margin:22px 0 6px;}
+.legale p, .legale li{font-size:16px; line-height:1.68;}
+.legale ul, .legale ol{padding-left:22px;}
+.legale li{margin-bottom:7px;}
+.legale table{
+  width:100%; border-collapse:collapse; margin:14px 0; font-size:15px;
+}
+.legale th, .legale td{
+  text-align:left; padding:9px 12px; border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+.legale th{font-weight:700; background:var(--cream-2);}
+.legale .tabella-scorre{overflow-x:auto; margin:14px 0;}
+.legale .aggiornato{
+  font-size:13.5px; color:var(--ink-soft); margin-top:34px;
+  padding-top:14px; border-top:1px solid var(--line);
+}
+.legale .scheda-titolare{
+  background:var(--cream-2); border-radius:14px; padding:18px 20px; margin:20px 0;
+  font-size:15.5px; line-height:1.6;
+}
+.legale .scheda-titolare strong{display:block; font-size:16.5px; margin-bottom:4px;}
+/* Segnaposto: impossibile pubblicare per sbaglio senza accorgersene. */
+.dacompletare{
+  background:#FFE9A8; color:#6B4A00; font-weight:800;
+  padding:1px 7px; border-radius:5px; border:1px dashed #C79A2E;
+}
+
+/* =================================================== banner del consenso
+   Il tag pubblicitario non parte finche' non si sceglie: per questo il
+   banner non ha una X che lo chiude e basta. Chiudere e' una scelta. */
+.consenso{
+  position:fixed; left:12px; right:12px; bottom:12px; z-index:9999;
+  background:var(--cream); color:var(--ink);
+  border:1px solid var(--line); border-radius:16px;
+  box-shadow:0 8px 40px -8px rgba(15,44,70,.32);
+  padding:20px 22px; max-width:620px; margin:0 auto;
+}
+.consenso[hidden]{display:none !important;}
+.consenso h2{font-size:18px; margin:0 0 7px;}
+.consenso p{font-size:14.5px; line-height:1.58; margin:0 0 14px; color:var(--ink-soft);}
+.consenso p a{font-weight:700;}
+.consenso .tasti{display:flex; flex-wrap:wrap; gap:10px;}
+.consenso .tasti .btn{flex:1 1 auto; min-width:150px;}
+@media (max-width:520px){
+  .consenso{padding:17px 18px;}
+  .consenso .tasti .btn{flex:1 1 100%;}
+}

@@ -374,7 +374,7 @@ const REGOLE = {
  "maxPezziTotali": 40,
  "maxTotaleEuro": 500,
  "minTotaleDomicilio": 0,
- "chiusuraFino": "2026-08-18",
+ "chiusuraFino": "",
  "orari": {
   "pranzo": {
    "apre": "11:30",
@@ -1136,6 +1136,62 @@ async function leggiCheckoutSumUp(env, idCheckout) {
   return r.json();
 }
 
+// ------------------------------------------------- pagamenti in sospeso
+// Oltre questa eta' non ha senso ricontrollare: il checkout SumUp e' scaduto
+// e l'ordine non verra' piu' pagato.
+const RICONCILIA_ORE = 8;
+// Tetto alle chiamate verso SumUp per ogni giro, per non allungare la
+// risposta del pannello quando ci sono molti ordini in sospeso.
+const RICONCILIA_MAX = 10;
+
+// Prende gli ordini gia' letti dall'archivio, individua quelli con carta
+// rimasti in sospeso e chiede a SumUp se nel frattempo sono stati pagati.
+// Quelli che risultano pagati vengono aggiornati e annunciati in pizzeria,
+// esattamente come se il cliente fosse tornato sul sito.
+// Modifica gli oggetti sul posto, cosi' la risposta al pannello e' gia'
+// quella aggiornata e non serve una seconda lettura.
+async function riconciliaPagamenti(env, caricati) {
+  if (!env.SUMUP_API_KEY) return 0;
+  const limite = Date.now() - RICONCILIA_ORE * 60 * 60 * 1000;
+
+  const sospesi = caricati.filter(([, d]) =>
+    (d.pagamento || "carta") === "carta" &&
+    d.stato !== "pagato" && d.stato !== "importo_discordante" &&
+    d.idCheckout &&
+    Date.parse(d.creato) >= limite
+  ).slice(0, RICONCILIA_MAX);
+
+  if (!sospesi.length) return 0;
+
+  const esiti = await Promise.all(sospesi.map(([chiave, d]) => segnaSePagato(env, chiave, d)));
+  return esiti.filter(Boolean).length;
+}
+
+async function segnaSePagato(env, chiave, d) {
+  try {
+    const check = await leggiCheckoutSumUp(env, d.idCheckout);
+    if (check.status !== "PAID") return false;
+
+    // Stessa prudenza di /stato: pagato ma con l'importo sbagliato non e'
+    // pagato, e' un caso da guardare in faccia prima di preparare qualcosa.
+    d.stato = Math.abs(Number(check.amount) - d.attesoEuro) < 0.005
+      ? "pagato" : "importo_discordante";
+    d.pagatoIl = d.pagatoIl || new Date().toISOString();
+    d.verificato = new Date().toISOString();
+    d.riconciliato = true;          // non e' arrivato dal ritorno del cliente
+
+    if (d.stato === "pagato" && !d.avvisato) {
+      const [e1, e2] = await Promise.all([avvisaPizzeria(env, d), avvisaPush(env, d)]);
+      if (e1.inviato || e2.inviato) d.avvisato = new Date().toISOString();
+    }
+    await env.ORDINI.put(chiave, JSON.stringify(d), { expirationTtl: 60 * 60 * 24 * 30 });
+    return true;
+  } catch {
+    // SumUp irraggiungibile: si riprova al giro dopo, fra venti secondi.
+    return false;
+  }
+}
+
 // Verifica completa e archiviazione. Condivisa fra carta e contanti:
 // le regole devono essere le stesse, altrimenti il contante diventa
 // la porta di servizio da cui passa quello che la carta rifiuta.
@@ -1445,11 +1501,23 @@ export default {
       if (!env.ORDINI) return json({ errore: "Archivio non disponibile." }, 503, origine);
 
       const elenco = await env.ORDINI.list({ prefix: "ordine:", limit: 60 });
-      const ordini = [];
+      const caricati = [];
       for (const k of elenco.keys) {
         const v = await env.ORDINI.get(k.name);
         if (!v) continue;
-        const d = JSON.parse(v);
+        caricati.push([k.name, JSON.parse(v)]);
+      }
+
+      // Un pagamento riuscito puo' restare invisibile: SumUp lo sa, noi no,
+      // perche' l'unico momento in cui glielo chiediamo e' quando il cliente
+      // torna sul sito. Se chiude la scheda, l'ordine resta marchiato "non
+      // concluso" per sempre e la pizzeria non sa se preparare o incassare.
+      // Qui li ricontrolliamo da soli, riusando gli ordini gia' letti sopra
+      // per non raddoppiare le letture dell'archivio.
+      await riconciliaPagamenti(env, caricati);
+
+      const ordini = [];
+      for (const [, d] of caricati) {
         ordini.push({
           riferimento: d.riferimento,
           creato: d.creato,

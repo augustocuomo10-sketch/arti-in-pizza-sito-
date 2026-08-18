@@ -1,0 +1,107 @@
+/* Consenso ai cookie pubblicitari — Arti in Pizza
+ *
+ * Il sito non usa cookie propri. L'unico che ne mette e' il tag di Google
+ * Ads, che serve a capire quali annunci portano telefonate. Non e' un cookie
+ * necessario al funzionamento: per legge deve partire SOLO dopo un consenso
+ * esplicito, e deve essere altrettanto facile rifiutarlo.
+ *
+ * Per questo il tag non viene caricato qui: assets/js/tracking.js aspetta
+ * il via da questo file. Finche' non si sceglie, verso Google non parte nulla.
+ */
+(function () {
+  "use strict";
+
+  var CHIAVE = "aip_consenso_v1";
+  var EN = location.pathname.indexOf("/en/") === 0;
+  var RADICE = EN ? "../" : "";
+
+  var T = EN ? {
+    titolo: "Cookies for advertising",
+    testo: "This site works without cookies. We would only use Google's, to see which " +
+           "adverts bring in phone calls. Nothing is sent until you choose.",
+    link: "Read the cookie policy",
+    si: "Accept",
+    no: "Decline"
+  } : {
+    titolo: "Cookie per la pubblicità",
+    testo: "Il sito funziona senza cookie. Ne useremmo solo di Google, per capire quali " +
+           "annunci portano telefonate. Finché non scegli non parte nulla.",
+    link: "Leggi l'informativa cookie",
+    si: "Accetta",
+    no: "Rifiuta"
+  };
+
+  function letto() {
+    try { return localStorage.getItem(CHIAVE); } catch (e) { return null; }
+  }
+  function scrivi(v) {
+    try { localStorage.setItem(CHIAVE, v); } catch (e) { /* navigazione privata */ }
+  }
+
+  // Lo stato serve a tracking.js, che si carica subito dopo questo file.
+  window.consensoMarketing = letto() === "si";
+
+  // Ritirare il consenso deve valere anche per i cookie gia' installati,
+  // altrimenti il rifiuto e' solo una promessa per il futuro. Google li
+  // mette sul nostro dominio, quindi possiamo cancellarli noi.
+  function ripulisciCookieGoogle() {
+    var suoi = ["_gcl_au", "_gcl_aw", "_gcl_dc", "_gac_gb_", "_ga"];
+    var domini = [location.hostname, "." + location.hostname];
+    var punti = location.hostname.split(".");
+    if (punti.length > 2) domini.push("." + punti.slice(-2).join("."));
+
+    document.cookie.split(";").forEach(function (voce) {
+      var nome = voce.split("=")[0].trim();
+      var nostro = suoi.some(function (s) { return nome.indexOf(s) === 0; });
+      if (!nostro) return;
+      domini.forEach(function (d) {
+        document.cookie = nome + "=; Max-Age=0; path=/; domain=" + d;
+      });
+      document.cookie = nome + "=; Max-Age=0; path=/";
+    });
+  }
+
+  function decidi(valore) {
+    scrivi(valore);
+    if (valore !== "si") ripulisciCookieGoogle();
+    window.consensoMarketing = valore === "si";
+    var b = document.getElementById("consenso");
+    if (b) b.hidden = true;
+    // avvisa tracking.js, che puo' accendersi senza ricaricare la pagina
+    document.dispatchEvent(new CustomEvent("consenso-deciso", {
+      detail: { marketing: window.consensoMarketing }
+    }));
+  }
+  // serve alla pagina dell'informativa per far cambiare idea
+  window.cambiaConsenso = decidi;
+
+  function mostra() {
+    if (letto()) return;                       // ha gia' scelto
+    if (document.getElementById("consenso")) return;
+
+    var b = document.createElement("aside");
+    b.id = "consenso";
+    b.className = "consenso";
+    b.setAttribute("role", "dialog");
+    b.setAttribute("aria-labelledby", "consenso-titolo");
+    b.innerHTML =
+      '<h2 id="consenso-titolo">' + T.titolo + "</h2>" +
+      "<p>" + T.testo + ' <a href="' + RADICE + 'cookie.html">' + T.link + "</a>.</p>" +
+      '<div class="tasti">' +
+      '<button type="button" class="btn btn-outline" data-consenso="no">' + T.no + "</button>" +
+      '<button type="button" class="btn btn-primary" data-consenso="si">' + T.si + "</button>" +
+      "</div>";
+    document.body.appendChild(b);
+
+    b.addEventListener("click", function (e) {
+      var t = e.target.closest("[data-consenso]");
+      if (t) decidi(t.getAttribute("data-consenso"));
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", mostra);
+  } else {
+    mostra();
+  }
+})();

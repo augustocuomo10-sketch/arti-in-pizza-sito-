@@ -122,4 +122,22 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://artiinpizza.com/storia.html"/>
   </url>
 
+  <url>
+    <loc>https://artiinpizza.com/privacy.html</loc>
+    <lastmod>2026-08-18</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://artiinpizza.com/cookie.html</loc>
+    <lastmod>2026-08-18</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://artiinpizza.com/condizioni-di-vendita.html</loc>
+    <lastmod>2026-08-18</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+  </url>
 </urlset>

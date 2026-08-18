@@ -368,7 +368,7 @@ export const REGOLE = {
  "maxPezziTotali": 40,
  "maxTotaleEuro": 500,
  "minTotaleDomicilio": 0,
- "chiusuraFino": "2026-08-18",
+ "chiusuraFino": "",
  "orari": {
   "pranzo": {
    "apre": "11:30",

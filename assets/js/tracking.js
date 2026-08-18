@@ -51,8 +51,16 @@
   window.gtag = window.gtag || gtag;
 
   var tagId = CONFIG.GA4_ID || CONFIG.ADS_ID;
+  var acceso = false;
 
-  if (tagId) {
+  // I cookie di Google servono alla pubblicita', non al sito: per legge non
+  // possono partire prima di un consenso esplicito. Il via lo da'
+  // assets/js/consenso.js, che deve essere caricato PRIMA di questo file.
+  // Finche' non arriva, verso Google non parte una sola richiesta.
+  function accendi() {
+    if (acceso || !tagId) return;
+    acceso = true;
+
     var s = document.createElement("script");
     s.async = true;
     s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(tagId);
@@ -62,6 +70,12 @@
     if (CONFIG.GA4_ID) gtag("config", CONFIG.GA4_ID);
     if (CONFIG.ADS_ID) gtag("config", CONFIG.ADS_ID);
   }
+
+  if (window.consensoMarketing) accendi();
+  // chi accetta dal banner non deve ricaricare la pagina perche' valga
+  document.addEventListener("consenso-deciso", function (e) {
+    if (e.detail && e.detail.marketing) accendi();
+  });
 
   /* -------------------------------------------------------------------------
      Invio eventi
@@ -76,6 +90,8 @@
       console.log("[tracking]", eventName, params, adsLabel ? "(+Ads)" : "");
       return;
     }
+    // senza consenso non si misura: meglio un dato in meno che un cookie in piu'
+    if (!acceso) return;
 
     // GA4
     if (CONFIG.GA4_ID) gtag("event", eventName, params);
