@@ -67,6 +67,7 @@
     window.consensoMarketing = valore === "si";
     var b = document.getElementById("consenso");
     if (b) b.hidden = true;
+    liberaIngombro();
     // avvisa tracking.js, che puo' accendersi senza ricaricare la pagina
     document.dispatchEvent(new CustomEvent("consenso-deciso", {
       detail: { marketing: window.consensoMarketing }
@@ -74,6 +75,28 @@
   }
   // serve alla pagina dell'informativa per far cambiare idea
   window.cambiaConsenso = decidi;
+
+  // Il banner sta in fondo allo schermo, dove sul telefono c'e' anche il
+  // pulsante del carrello. Pubblichiamo la sua altezza reale come variabile
+  // CSS, cosi' il carrello puo' spostarsi sopra invece di finirci sotto.
+  function segnalaIngombro(b) {
+    function aggiorna() {
+      if (!b || b.hidden) return;
+      var h = Math.ceil(b.getBoundingClientRect().height);
+      document.documentElement.style.setProperty("--altezza-consenso", h + "px");
+    }
+    document.body.classList.add("consenso-aperto");
+    aggiorna();
+    // il testo va a capo diversamente se si ruota il telefono
+    window.addEventListener("resize", aggiorna);
+    window.addEventListener("orientationchange", aggiorna);
+    if (window.ResizeObserver) new ResizeObserver(aggiorna).observe(b);
+  }
+
+  function liberaIngombro() {
+    document.body.classList.remove("consenso-aperto");
+    document.documentElement.style.removeProperty("--altezza-consenso");
+  }
 
   function mostra() {
     if (letto()) return;                       // ha gia' scelto
@@ -92,6 +115,7 @@
       '<button type="button" class="btn btn-primary" data-consenso="si">' + T.si + "</button>" +
       "</div>";
     document.body.appendChild(b);
+    segnalaIngombro(b);
 
     b.addEventListener("click", function (e) {
       var t = e.target.closest("[data-consenso]");

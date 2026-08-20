@@ -1255,6 +1255,19 @@ body.carrello-aperto{overflow:hidden;}
   padding:1px 7px; border-radius:5px; border:1px dashed #C79A2E;
 }
 
+/* Finche' il banner del consenso e' aperto occupa il fondo dello schermo,
+   dove sul telefono sta anche il pulsante del carrello. Senza questo, il
+   cliente che tocca "Ordina" preme in realta' il tasto del banner e non
+   riesce a ordinare: l'altezza reale la misura consenso.js. */
+body.consenso-aperto .carrello-fab{
+  bottom:calc(var(--altezza-consenso, 0px) + 24px);
+}
+@media (max-width:640px){
+  body.consenso-aperto .carrello-fab{
+    bottom:calc(var(--altezza-consenso, 0px) + 18px);
+  }
+}
+
 /* =================================================== banner del consenso
    Il tag pubblicitario non parte finche' non si sceglie: per questo il
    banner non ha una X che lo chiude e basta. Chiudere e' una scelta. */
@@ -1272,6 +1285,9 @@ body.carrello-aperto{overflow:hidden;}
 .consenso .tasti{display:flex; flex-wrap:wrap; gap:10px;}
 .consenso .tasti .btn{flex:1 1 auto; min-width:150px;}
 @media (max-width:520px){
-  .consenso{padding:17px 18px;}
-  .consenso .tasti .btn{flex:1 1 100%;}
+  .consenso{padding:15px 16px; border-radius:14px;}
+  .consenso h2{font-size:16.5px; margin-bottom:5px;}
+  .consenso p{font-size:13.5px; line-height:1.5; margin-bottom:11px;}
+  .consenso .tasti{gap:8px;}
+  .consenso .tasti .btn{flex:1 1 calc(50% - 4px); min-width:0; padding:11px 12px; font-size:14px;}
 }
