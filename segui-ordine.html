@@ -7,8 +7,9 @@
 <meta name="description" content="Segui l'avanzamento del tuo ordine da Arti in Pizza, Como.">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0F2C46">
-<link rel="stylesheet" href="assets/css/styles.css?v=202608202002">
-<script src="assets/js/consenso.js?v=202608202002"></script>
+<link rel="stylesheet" href="assets/css/styles.css?v=202608211115">
+<script src="assets/js/consenso.js?v=202608211115"></script>
+<script src="assets/js/ordine-corso.js?v=202608211115" defer></script>
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/icone/icona-180.png">
 <style>
@@ -172,7 +173,15 @@
   "use strict";
   var API = "https://bitter-firefly-4508.augusto-cuomo10.workers.dev";
   var box = document.getElementById("contenuto");
+  // Il riferimento arriva dal link; se manca (il cliente ha aperto il sito
+  // e non il link salvato) lo recuperiamo da quello che il browser ricorda.
   var rif = new URLSearchParams(location.search).get("ref") || "";
+  if (!rif) {
+    try {
+      var g = JSON.parse(localStorage.getItem("aip_ordine_corso") || "null");
+      if (g && g.rif) rif = g.rif;
+    } catch (e) { /* niente da recuperare */ }
+  }
 
   var PASSI = {
     asporto: [
@@ -209,6 +218,7 @@
 
   function disegna(d) {
     if (d.lavorazione === "annullato") {
+      if (window.scordaOrdineCorso) window.scordaOrdineCorso();
       guaio("Ordine annullato", "Questo ordine è stato annullato: non ti verrà addebitato nulla.");
       return;
     }
@@ -217,6 +227,8 @@
     var attuale = 0;
     passi.forEach(function (p, i) { if (p[0] === d.lavorazione) attuale = i; });
     var finito = d.lavorazione === "completato";
+    // concluso: il browser puo' smettere di riproporlo su ogni pagina
+    if (finito && window.scordaOrdineCorso) window.scordaOrdineCorso();
 
     // gli orari dei passaggi arrivano dallo storico tenuto dal server
     var quando = {};

@@ -49,13 +49,13 @@
     orario: "What time", orarioSegno: "e.g. 20:00 (24h), or «as soon as possible»",
     note: "Notes", notePlaceholder: "Allergies, doorbell, dough preferences…",
     pagamento: "How would you like to pay",
-    pagIntro: "Finish here: pay now by card, or in cash on delivery.",
+    pagIntro: "Both ways work for pickup and delivery alike: pay now by card, or in cash when you get it.",
     contanti: "Cash on delivery or pickup", online: "Card online",
     allergeni: "For allergies and intolerances see the ",
     allergeniLink: "allergen table (PDF)", allergeniFine: ", and tell us in the notes.",
     concludi: "Place the order", concludiPaga: "Pay ",
     sospesi: "Orders paused",
-    notaContanti: "We send the order to the pizzeria and confirm the timing. Please have cash ready: delivery and pickup are paid in cash.",
+    notaContanti: "We send the order to the pizzeria and confirm the timing. You will pay in cash when you collect it or when it arrives.",
     notaCarta: "We'll take you to the secure payment page. Once paid, your order is confirmed.",
     chiudi: "Close", togli: "Remove one", metti: "Add one",
     errNome: "We need a name to confirm your order.",
@@ -69,12 +69,15 @@
     chiuso: "We're closed right now — but you can pre-order: just tell us the time you want it, and we'll have it ready. Lunch 11:30am–3pm (Mon–Sat), dinner 6:30–10pm (every day).",
     preordina: "Place pre-order",
     preordinaPaga: "Pre-order and pay ",
-    notaPreordineContanti: "We're closed right now: we take the pre-order and have it ready for the time you gave us. Please have cash ready — delivery and pickup are paid in cash.",
+    notaPreordineContanti: "We're closed right now: we take the pre-order and have it ready for the time you gave us. You will pay in cash when you collect it or when it arrives.",
     notaPreordineCarta: "We're closed right now: you pay online and we have it ready for the time you gave us.",
     orarioObbligatorio: "Required now: we're closed, so tell us when you want it",
     errOrarioServe: "We're closed right now: write the time you'd like it in 24-hour format, for example 20:00.",
     errOrarioPassato: "That time has already passed today: pick a later one.",
-    integrale: "wholemeal"
+    integrale: "wholemeal",
+    passo1: "Order", passo2: "Details", passo3: "Payment",
+    avanti: "Continue", indietro: "Back",
+    passoDi: function (n, tot) { return "Step " + n + " of " + tot; }
   } : {
     apri: "Ordina", piatti1: " piatto", piattiN: " piatti",
     aggiungi: "Aggiungi", titolo: "Il tuo ordine",
@@ -85,13 +88,13 @@
     orario: "A che ora", orarioSegno: "es. 20:00, oppure «prima possibile»",
     note: "Note", notePlaceholder: "Allergie, citofono, preferenze sull'impasto…",
     pagamento: "Come vuoi pagare",
-    pagIntro: "Concludi qui: paghi subito con carta, oppure in contanti alla consegna.",
+    pagIntro: "Vanno bene entrambi, sia per il ritiro sia per la consegna: paghi subito con carta, oppure in contanti quando lo ricevi.",
     contanti: "In contanti alla consegna o al ritiro", online: "Online con carta",
     allergeni: "Per allergie e intolleranze consulta la ",
     allergeniLink: "tabella allergeni (PDF)", allergeniFine: ", e scrivilo nelle note.",
     concludi: "Concludi l'ordine", concludiPaga: "Concludi e paga ",
     sospesi: "Ordini sospesi",
-    notaContanti: "Inviamo l'ordine in pizzeria e ti confermiamo noi i tempi. Prepara i contanti: alla consegna e al ritiro si paga in contanti.",
+    notaContanti: "Inviamo l'ordine in pizzeria e ti confermiamo noi i tempi. Pagherai in contanti quando ritiri o quando arriva.",
     notaCarta: "Ti portiamo sulla pagina di pagamento sicura. A pagamento riuscito l'ordine è confermato.",
     chiudi: "Chiudi", togli: "Togli uno", metti: "Aggiungi uno",
     errNome: "Serve un nome per confermare l'ordine.",
@@ -105,12 +108,15 @@
     chiuso: "Ora siamo chiusi, ma puoi preordinare: indicaci l'orario in cui lo vuoi e lo troverai pronto. Pranzo 11:30–15:00 (lun–sab), cena 18:30–22:00 (tutti i giorni).",
     preordina: "Invia il preordine",
     preordinaPaga: "Preordina e paga ",
-    notaPreordineContanti: "Ora siamo chiusi: prendiamo il preordine e lo prepariamo per l'ora che ci hai indicato. Prepara i contanti: alla consegna e al ritiro si paga in contanti.",
+    notaPreordineContanti: "Ora siamo chiusi: prendiamo il preordine e lo prepariamo per l'ora che ci hai indicato. Pagherai in contanti quando ritiri o quando arriva.",
     notaPreordineCarta: "Ora siamo chiusi: paghi adesso online e lo prepariamo per l'ora che ci hai indicato.",
     orarioObbligatorio: "Adesso obbligatorio: siamo chiusi, dicci quando lo vuoi",
     errOrarioServe: "Ora siamo chiusi: scrivi l'orario in cui vuoi l'ordine, per esempio 20:00.",
     errOrarioPassato: "Quell'ora di oggi è già passata: scegline una più avanti.",
-    integrale: "integrale"
+    integrale: "integrale",
+    passo1: "Ordine", passo2: "Dati", passo3: "Pagamento",
+    avanti: "Avanti", indietro: "Indietro",
+    passoDi: function (n, tot) { return "Passo " + n + " di " + tot; }
   };
 
   var FORMATI_EN = { Classica: "Classic", Ruota: "Ruota", unico: "" };
@@ -305,6 +311,19 @@
       return;
     }
 
+    // Barra di avanzamento: tre passi invece di un modulo unico lungo.
+    // Su schermo di telefono un modulo con otto campi tutti insieme scoraggia,
+    // e non si capisce quanto manca alla fine.
+    h += '<ol class="passi-barra" aria-label="' + T.passoDi(1, 3) + '">' +
+      '<li class="passo-tacca ora" data-p="1"><span class="pallo">1</span><span>' + T.passo1 + '</span></li>' +
+      '<li class="passo-tacca" data-p="2"><span class="pallo">2</span><span>' + T.passo2 + '</span></li>' +
+      '<li class="passo-tacca" data-p="3"><span class="pallo">3</span><span>' + T.passo3 + '</span></li>' +
+      '</ol>';
+
+    h += '<form class="carrello-form" novalidate>';
+
+    // ---------------------------------------------------- passo 1: l'ordine
+    h += '<div class="passo" data-passo="1">';
     h += '<ul class="carrello-righe">';
     carrello.forEach(function (r) {
       var unit = r.prezzo + (r.integrale ? CFG.integraleSupplemento : 0);
@@ -331,8 +350,11 @@
       '<div class="tot-riga"><span>' + T.piattiRiga + '</span><span id="tot-piatti">' + euro(tot) + "</span></div>" +
       '<div class="tot-riga" id="riga-consegna" hidden><span>' + T.consegna + '</span><span>' + euro(CFG.consegnaSupplemento) + "</span></div>" +
       '<div class="tot-riga tot-finale"><span>' + T.totale + '</span><span id="tot-finale">' + euro(tot) + "</span></div></div>";
+    h += '<button type="button" class="btn btn-primary btn-block vai-avanti">' + T.avanti + ' →</button>';
+    h += '</div>';
 
-    h += '<form class="carrello-form" novalidate>' +
+    // ----------------------------------------------------- passo 2: i dati
+    h += '<div class="passo" data-passo="2" hidden>' +
       '<label>' + T.nome + '<input type="text" name="nome" required autocomplete="name"></label>' +
       '<label>' + T.telefono + '<input type="tel" name="telefono" required autocomplete="tel" inputmode="tel"></label>' +
       '<label class="campo-indirizzo" hidden>' + T.indirizzo + '<input type="text" name="indirizzo" autocomplete="street-address"></label>' +
@@ -341,6 +363,13 @@
       '<input type="text" name="orario" placeholder="' + T.orarioSegno + '"' +
       (stato.preordinabile ? " required" : "") + "></label>" +
       '<label>' + T.note + '<textarea name="note" rows="2" placeholder="' + T.notePlaceholder + '"></textarea></label>' +
+      '<div class="passo-tasti">' +
+      '<button type="button" class="btn btn-outline vai-indietro">← ' + T.indietro + '</button>' +
+      '<button type="button" class="btn btn-primary vai-avanti">' + T.avanti + ' →</button>' +
+      '</div></div>' +
+
+      // ------------------------------------------------ passo 3: pagamento
+      '<div class="passo" data-passo="3" hidden>' +
       '<fieldset class="carrello-pagamento"><legend>' + T.pagamento + '</legend>' +
       '<p class="pag-intro">' + T.pagIntro + '</p>' +
       '<label><input type="radio" name="pagamento" value="contanti" checked> ' + T.contanti + '</label>' +
@@ -352,11 +381,82 @@
       (stato.aperto || stato.preordinabile ? "" : " disabled") + ">" +
       (stato.aperto ? T.concludi : (stato.preordinabile ? T.preordina : T.sospesi)) + "</button>" +
       '<p class="carrello-nota"></p>' +
-      "</form>";
+      '<button type="button" class="btn btn-outline btn-block vai-indietro">← ' + T.indietro + '</button>' +
+      '</div></form>';
 
     pannello.innerHTML = h;
     agganciaChiusura();
     agganciaEventi();
+    agganciaPassi();
+  }
+
+  // ------------------------------------------------------ passi del carrello
+  // Un passo alla volta, e non si avanza finche' i campi di quel passo non
+  // sono a posto: l'errore si vede dov'e' stato fatto, non a fine modulo.
+  var passoCorrente = 1;
+
+  function mostraPasso(n) {
+    passoCorrente = n;
+    pannello.querySelectorAll(".passo").forEach(function (p) {
+      p.hidden = Number(p.dataset.passo) !== n;
+    });
+    pannello.querySelectorAll(".passo-tacca").forEach(function (t) {
+      var suo = Number(t.dataset.p);
+      t.classList.toggle("ora", suo === n);
+      t.classList.toggle("fatto", suo < n);
+      t.querySelector(".pallo").textContent = suo < n ? "✓" : String(suo);
+    });
+    var barra = pannello.querySelector(".passi-barra");
+    if (barra) barra.setAttribute("aria-label", T.passoDi(n, 3));
+    var corpo = pannello.querySelector(".carrello-form");
+    if (corpo) corpo.scrollIntoView({ block: "start", behavior: "smooth" });
+  }
+
+  // Ritorna true se il passo e' completo. Il passo 1 e' sempre valido:
+  // il carrello ha gia' almeno una riga, altrimenti non saremmo qui.
+  function passoValido(n) {
+    if (n !== 2) return true;
+    var form = pannello.querySelector(".carrello-form");
+    var d = {
+      nome: (form.querySelector('[name="nome"]').value || "").trim(),
+      telefono: (form.querySelector('[name="telefono"]').value || "").trim(),
+      orario: (form.querySelector('[name="orario"]').value || "").trim(),
+      indirizzo: (form.querySelector('[name="indirizzo"]').value || "").trim(),
+      modalita: form.querySelector('input[name="modalita"]:checked').value
+    };
+    var problemi = [
+      [form.querySelector('[name="nome"]'), erroreNome(d.nome)],
+      [form.querySelector('[name="telefono"]'), erroreTelefono(d.telefono)],
+      [form.querySelector('[name="orario"]'), erroreOrario(d.orario)]
+    ];
+    if (d.modalita === "domicilio" && !d.indirizzo) {
+      problemi.push([form.querySelector('[name="indirizzo"]'), T.errIndirizzo]);
+    }
+    var rotti = problemi.filter(function (x) { return x[1]; });
+    rotti.forEach(function (x) { mostraErroreCampo(x[0], x[1]); });
+    if (rotti.length) { rotti[0][0].focus(); return false; }
+    return true;
+  }
+
+  function agganciaPassi() {
+    pannello.querySelectorAll(".vai-avanti").forEach(function (b) {
+      b.addEventListener("click", function () {
+        if (!passoValido(passoCorrente)) return;
+        mostraPasso(Math.min(3, passoCorrente + 1));
+      });
+    });
+    pannello.querySelectorAll(".vai-indietro").forEach(function (b) {
+      b.addEventListener("click", function () { mostraPasso(Math.max(1, passoCorrente - 1)); });
+    });
+    // le tacche in cima sono cliccabili solo all'indietro: saltare avanti
+    // scavalcherebbe i controlli
+    pannello.querySelectorAll(".passo-tacca").forEach(function (t) {
+      t.addEventListener("click", function () {
+        var n = Number(t.dataset.p);
+        if (n < passoCorrente) mostraPasso(n);
+      });
+    });
+    mostraPasso(1);
   }
 
   function agganciaChiusura() {
@@ -497,6 +597,7 @@
         if (res.stato !== 200 || !res.corpo.riferimento) {
           throw new Error((res.corpo && res.corpo.errore) || "risposta non valida");
         }
+        ricordaOrdine(res.corpo.riferimento);
         svuota();
         location.href = "ordine-ricevuto.html?ref=" +
           encodeURIComponent(res.corpo.riferimento) + "&modo=contanti";
@@ -506,6 +607,18 @@
         btn.textContent = testoPrima;
         mostraErrore(err.message);
       });
+  }
+
+  // ----------------------------------------------- l'ordine appena inviato
+  // Lo segniamo nel browser cosi' che, riaprendo il sito da qualsiasi pagina,
+  // il cliente ritrovi il suo ordine senza doversi essere salvato il link.
+  // Solo il riferimento: niente nome, telefono o indirizzo.
+  function ricordaOrdine(rif) {
+    try {
+      localStorage.setItem("aip_ordine_corso", JSON.stringify({
+        rif: rif, quando: Date.now()
+      }));
+    } catch (e) { /* navigazione privata: pazienza, resta il link */ }
   }
 
   function svuota() {
@@ -526,7 +639,14 @@
     })
       .then(function (r) { return r.json().then(function (b) { return { stato: r.status, corpo: b }; }); })
       .then(function (res) {
-        if (res.stato === 200 && res.corpo && res.corpo.url) { svuota(); location.href = res.corpo.url; return; }
+        if (res.stato === 200 && res.corpo && res.corpo.url) {
+          // si ricorda PRIMA di uscire verso SumUp: se il cliente non torna
+          // indietro da solo, l'ordine lo ritrova comunque aprendo il sito
+          if (res.corpo.riferimento) ricordaOrdine(res.corpo.riferimento);
+          svuota();
+          location.href = res.corpo.url;
+          return;
+        }
         // 422 = l'ordine non ha superato le verifiche del server: il messaggio
         // e' scritto per il cliente, quindi si mostra cosi' com'e'.
         throw new Error((res.corpo && res.corpo.errore) || "risposta non valida");

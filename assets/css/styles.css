@@ -1291,3 +1291,139 @@ body.consenso-aperto .carrello-fab{
   .consenso .tasti{gap:8px;}
   .consenso .tasti .btn{flex:1 1 calc(50% - 4px); min-width:0; padding:11px 12px; font-size:14px;}
 }
+
+/* ============================== menù a due livelli, sul telefono ===========
+   Da telefono si vedono prima le sole categorie, poi una sola categoria per
+   volta. Serve perche' su schermo stretto la pagina intera e' un muro di
+   quarantasette piatti in cui le piastrelle non sembrano premibili. */
+
+/* barra per tornare alle categorie: resta agganciata in alto mentre si
+   scorre la lista, altrimenti per uscire tocca risalire tutto */
+.barra-categoria{
+  position:sticky; top:calc(var(--header-h) + 1px); z-index:12;
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  background:var(--cream); padding:12px 0 13px;
+  border-bottom:1px solid var(--line); margin-bottom:18px;
+}
+.barra-categoria[hidden]{display:none;}
+.torna-categorie{
+  font-family:"Fredoka",sans-serif; font-weight:700; font-size:14.5px;
+  background:var(--blue); color:#fff; border:none; cursor:pointer;
+  border-radius:999px; padding:11px 18px;
+  display:inline-flex; align-items:center; gap:7px;
+  box-shadow:0 6px 16px color-mix(in srgb, var(--blue) 32%, transparent);
+}
+.torna-categorie:active{transform:scale(.97);}
+.barra-titolo{
+  font-family:"Fredoka",sans-serif; font-weight:700; font-size:15px;
+  color:var(--ink-soft);
+}
+
+/* mentre una categoria e' aperta, le piastrelle spariscono: sono il livello
+   di sopra, tenerle sotto gli occhi confonde su dove ci si trova */
+body.categoria-aperta .category-tiles{display:none;}
+body.categoria-aperta .menu-note{display:none;}
+
+@media (max-width:900px){
+  /* le piastrelle devono sembrare pulsanti, non decorazioni: via il quadrato,
+     che su schermo stretto le rendeva enormi e faceva sparire le altre */
+  .category-tiles{grid-template-columns:1fr 1fr; gap:12px; margin:6px 0 28px;}
+  .category-tile{
+    aspect-ratio:auto; min-height:96px; border-radius:16px;
+    flex-direction:column; justify-content:center; gap:5px; padding:16px 12px;
+  }
+  .category-tile .tile-label{font-size:17px;}
+  /* la freccia dice "qui si entra", che e' l'informazione che mancava */
+  .category-tile::after{
+    content:"Vedi  ›"; font-family:"Archivo",sans-serif;
+    font-size:11.5px; font-weight:700; letter-spacing:.06em;
+    opacity:.85;
+  }
+  .category-tile.is-active::after{content:"Vedi  ›";}
+  .category-tile.is-active{outline-color:transparent;}
+  .category-tile .tile-badge{font-size:9px; top:7px;}
+
+  /* invito sopra la griglia, cosi' e' esplicito cosa si deve fare */
+  .category-tiles::before{
+    content:attr(data-invito); grid-column:1 / -1;
+    font-family:"Archivo",sans-serif; font-size:12.5px; font-weight:700;
+    letter-spacing:.09em; text-transform:uppercase; color:var(--ink-soft);
+    margin-bottom:2px;
+  }
+}
+
+/* ===================== carrello a passi, con barra di avanzamento =========
+   Un modulo unico con otto campi, su telefono, scoraggia: non si capisce
+   quanto manca. Tre passi con la barra in cima danno la misura del percorso. */
+.passi-barra{
+  display:flex; list-style:none; margin:0 0 20px; padding:0; gap:6px;
+  counter-reset:none;
+}
+.passo-tacca{
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;
+  font-family:"Archivo",sans-serif; font-size:11.5px; font-weight:700;
+  letter-spacing:.04em; color:var(--ink-soft); text-align:center;
+  position:relative; padding-top:2px;
+}
+/* il filo che unisce le tacche: mostra che è un percorso, non tre pulsanti */
+.passo-tacca:not(:last-child)::after{
+  content:""; position:absolute; top:15px; left:calc(50% + 18px); right:calc(-50% + 18px);
+  height:2px; background:color-mix(in srgb, var(--ink) 14%, transparent);
+}
+.passo-tacca.fatto:not(:last-child)::after{background:var(--green);}
+.passo-tacca .pallo{
+  width:30px; height:30px; border-radius:50%; display:grid; place-items:center;
+  font-size:13px; font-weight:800; z-index:1;
+  background:color-mix(in srgb, var(--ink) 10%, transparent); color:var(--ink-soft);
+  transition:background .2s ease, color .2s ease, box-shadow .2s ease;
+}
+.passo-tacca.ora{color:var(--blue-ink);}
+.passo-tacca.ora .pallo{
+  background:var(--blue); color:#fff;
+  box-shadow:0 0 0 4px color-mix(in srgb, var(--blue) 20%, transparent);
+}
+.passo-tacca.fatto{color:var(--green); cursor:pointer;}
+.passo-tacca.fatto .pallo{background:var(--green); color:#fff;}
+
+.passo[hidden]{display:none !important;}
+.passo-tasti{display:flex; gap:10px; margin-top:6px;}
+.passo-tasti .btn{flex:1;}
+.carrello-form .vai-avanti{margin-top:14px;}
+.carrello-form .vai-indietro{margin-top:10px;}
+
+/* ================================ ordine in corso, su ogni pagina =========
+   Chi ha ordinato dal telefono chiude il browser e poi non ritrova più il
+   link: questa barra glielo ridà da qualunque pagina, finché serve. */
+.ordine-corso{
+  position:fixed; left:12px; right:12px; bottom:12px; z-index:70;
+  max-width:520px; margin:0 auto;
+  display:flex; align-items:stretch; gap:2px;
+  background:var(--deep); color:var(--deep-text);
+  border-radius:16px; overflow:hidden;
+  box-shadow:0 10px 34px -8px rgba(15,44,70,.55);
+}
+.ordine-corso .oc-vai{
+  flex:1; display:flex; align-items:center; gap:12px;
+  padding:13px 8px 13px 16px; text-decoration:none; color:inherit;
+}
+.ordine-corso .oc-punto{
+  width:9px; height:9px; border-radius:50%; background:var(--azzurro); flex:none;
+  animation:oc-battito 2s ease-in-out infinite;
+}
+@keyframes oc-battito{0%,100%{opacity:1;}50%{opacity:.25;}}
+@media (prefers-reduced-motion:reduce){.ordine-corso .oc-punto{animation:none;}}
+.ordine-corso .oc-testo{display:flex; flex-direction:column; line-height:1.3;}
+.ordine-corso .oc-testo strong{font-family:"Fredoka",sans-serif; font-size:15px;}
+.ordine-corso .oc-testo span{font-size:12.5px; opacity:.82;}
+.ordine-corso .oc-freccia{font-size:24px; opacity:.7; padding-right:6px;}
+.ordine-corso .oc-chiudi{
+  background:none; border:none; color:inherit; cursor:pointer;
+  font-size:15px; opacity:.55; padding:0 15px;
+}
+.ordine-corso .oc-chiudi:hover{opacity:1;}
+
+/* il carrello si sposta sopra la barra, come fa col banner dei cookie */
+body.con-ordine-corso .carrello-fab{bottom:calc(72px + 18px);}
+body.con-ordine-corso.consenso-aperto .carrello-fab{
+  bottom:calc(var(--altezza-consenso, 0px) + 72px + 24px);
+}
