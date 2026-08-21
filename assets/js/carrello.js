@@ -46,6 +46,7 @@
     ritiro: "Pick up in store", domicilio: "Home delivery (+",
     piattiRiga: "Items", consegna: "Delivery", totale: "Total",
     nome: "Full name", telefono: "Phone", indirizzo: "Delivery address",
+    telSegno: "e.g. +44 7700 900461 — foreign numbers welcome",
     orario: "What time", orarioSegno: "e.g. 20:00 (24h), or «as soon as possible»",
     note: "Notes", notePlaceholder: "Allergies, doorbell, dough preferences…",
     pagamento: "How would you like to pay",
@@ -63,12 +64,14 @@
     errTelefonoVuoto: "We need your phone: without it we can't confirm the order.",
     errTelSoloCifre: "Digits only, plus +39 if you like.",
     errTelCorto: "That number is too short: please check it.",
-    errTelLungo: "That number is too long: leave out the country code.",
+    errTelLungo: "That number is too long to be valid.",
+    errTelEsteroCorto: "That international number looks incomplete.",
+    errTelForseEstero: "That number is too long. If it's a foreign one, add the country code, e.g. +44.",
     errTelFinto: "That doesn't look like a real number, and we need to reach you.",
     errTelPrefisso: "No Italian mobile prefix starts with 30.",
     errTelCellulare: "An Italian mobile number has 9 or 10 digits.",
     errTelFisso: "That landline looks short: is the area code missing?",
-    errTelServizio: "We need a home or mobile number: we can't call you back on that one.",
+    errTelServizio: "We need an Italian number, or a foreign one with its country code, e.g. +44.",
     errIndirizzo: "We need a full address for delivery.",
     errOrario: "Write a time in 24-hour format, like 20:00, or «as soon as possible».",
     errChiusi: "We're closed at that time. Lunch 11:30am–3pm (Mon–Sat), dinner 6:30–10pm.",
@@ -93,6 +96,7 @@
     ritiro: "Ritiro in pizzeria", domicilio: "Consegna a domicilio (+",
     piattiRiga: "Piatti", consegna: "Consegna", totale: "Totale",
     nome: "Nome e cognome", telefono: "Telefono", indirizzo: "Indirizzo di consegna",
+    telSegno: "es. 333 1234567 — straniero? mettici il +prefisso",
     orario: "A che ora", orarioSegno: "es. 20:00, oppure «prima possibile»",
     note: "Note", notePlaceholder: "Allergie, citofono, preferenze sull'impasto…",
     pagamento: "Come vuoi pagare",
@@ -110,12 +114,14 @@
     errTelefonoVuoto: "Serve il telefono: senza non possiamo confermarti l'ordine.",
     errTelSoloCifre: "Solo cifre, al massimo con il +39 davanti.",
     errTelCorto: "Il numero è troppo corto: controllalo.",
-    errTelLungo: "Il numero è troppo lungo: scrivilo senza prefisso internazionale.",
+    errTelLungo: "Il numero è troppo lungo per essere valido.",
+    errTelEsteroCorto: "Il numero internazionale sembra incompleto.",
+    errTelForseEstero: "Il numero è troppo lungo. Se è straniero, mettici davanti il prefisso, per esempio +44.",
     errTelFinto: "Questo numero non sembra reale, e ci serve per raggiungerti.",
     errTelPrefisso: "Non esiste un prefisso cellulare che inizia con 30.",
     errTelCellulare: "Un cellulare italiano ha 9 o 10 cifre.",
     errTelFisso: "Il numero fisso sembra corto: manca il prefisso di zona?",
-    errTelServizio: "Serve un numero di casa o di cellulare: su quello non possiamo richiamarti.",
+    errTelServizio: "Serve un numero italiano, oppure uno straniero con il prefisso davanti (per esempio +44).",
     errIndirizzo: "Per la consegna a domicilio serve l'indirizzo.",
     errOrario: "Scrivi un orario tipo 20:00, oppure «prima possibile».",
     errChiusi: "A quell'ora siamo chiusi. Pranzo 11:30–15:00 (lun–sab), cena 18:30–22:00.",
@@ -372,7 +378,7 @@
     // ----------------------------------------------------- passo 2: i dati
     h += '<div class="passo" data-passo="2" hidden>' +
       '<label>' + T.nome + '<input type="text" name="nome" required autocomplete="name"></label>' +
-      '<label>' + T.telefono + '<input type="tel" name="telefono" required autocomplete="tel" inputmode="tel"></label>' +
+      '<label>' + T.telefono + '<input type="tel" name="telefono" required autocomplete="tel" inputmode="tel" placeholder="' + T.telSegno + '"></label>' +
       '<label class="campo-indirizzo" hidden>' + T.indirizzo + '<input type="text" name="indirizzo" autocomplete="street-address"></label>' +
       '<label' + (stato.preordinabile ? ' class="campo-preordine"' : "") + ">" + T.orario +
       (stato.preordinabile ? '<small class="obbligo">' + T.orarioObbligatorio + "</small>" : "") +
@@ -686,10 +692,23 @@
 
   // Stesse regole del server, cosi' l'errore si vede mentre si scrive invece
   // che dopo aver premuto invia. Il controllo e' invisibile e istantaneo:
-  // nessun codice via SMS, nessuna attesa. Non dimostra che il numero sia di
-  // qualcuno, ma toglie di mezzo refusi, lunghezze impossibili e finti.
+  // nessun codice via SMS, nessuna attesa.
+  //
+  // Como vive di turismo e il sito ha una versione inglese: i numeri esteri
+  // devono passare. Si riconoscono dal prefisso internazionale scritto
+  // esplicitamente (+ oppure 00); senza, il numero e' italiano.
+  function scomponiTelefono(grezzo) {
+    var pulito = String(grezzo).replace(/[^\d+]/g, "");
+    var conPrefisso = /^(\+|00)/.test(pulito);
+    var c = pulito.replace(/^\+/, "").replace(/^00/, "").replace(/\D/g, "");
+    if (c.indexOf("39") === 0 && (conPrefisso || c.length >= 12)) {
+      return { cifre: c.slice(2), estero: false };
+    }
+    return { cifre: c, estero: conPrefisso };
+  }
+
   function sequenzaFinta(c) {
-    if (/^(\d)\1+$/.test(c)) return true;                 // 3333333333
+    if (/^(\d)\1+$/.test(c)) return true;
     var su = "0123456789012345678901234567890";
     var giu = "9876543210987654321098765432109";
     var coda = c.slice(-7);
@@ -697,13 +716,21 @@
   }
 
   function erroreTelefono(v) {
-    var c = normalizzaTelefono(v).replace(/\D/g, "");
+    var d = scomponiTelefono(v);
+    var c = d.cifre;
     if (!c) return T.errTelefonoVuoto;
-    if (/[^0-9]/.test(normalizzaTelefono(v))) return T.errTelSoloCifre;
-    if (c.length < 6) return T.errTelCorto;
-    if (c.length > 11) return T.errTelLungo;
     if (sequenzaFinta(c)) return T.errTelFinto;
 
+    // estero: si va larghi, rifiutare un turista vero costa piu' che
+    // accettare un numero strano
+    if (d.estero) {
+      if (c.length < 8) return T.errTelEsteroCorto;
+      if (c.length > 15) return T.errTelLungo;
+      return null;
+    }
+
+    if (c.length < 6) return T.errTelCorto;
+    if (c.length > 11) return T.errTelForseEstero;
     if (c.charAt(0) === "3") {
       if (c.charAt(1) === "0") return T.errTelPrefisso;
       if (c.length < 9 || c.length > 10) return T.errTelCellulare;
@@ -719,7 +746,6 @@
   // Il preordine e' sempre per la stessa giornata: l'ora deve essere ancora
   // davanti e cadere in una fascia di servizio di oggi. Stessa identica regola
   // del server, cosi' il cliente non si becca un rifiuto dopo aver inviato.
-  // Ritorna null se va bene, altrimenti il messaggio da mostrargli.
   function problemaOrario(richiesti, adesso) {
     var d = adesso || new Date();
     var ora = d.getHours() * 60 + d.getMinutes();

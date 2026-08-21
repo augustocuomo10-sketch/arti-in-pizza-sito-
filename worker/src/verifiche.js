@@ -31,10 +31,20 @@ function pulisci(v, max, campo) {
 // cliente vero. Per questo i prefissi mobili non sono un elenco chiuso —
 // AGCOM ne assegna di nuovi, e una lista congelata oggi rifiuterebbe domani
 // una persona in carne e ossa.
-function normalizzaTelefono(grezzo) {
-  let t = String(grezzo).replace(/[^\d+]/g, "");
-  t = t.replace(/^\+?0039/, "").replace(/^\+39/, "");
-  return t.replace(/\D/g, "");
+// Como vive di turismo e il sito ha una versione inglese: un numero estero
+// deve poter passare. Distinguiamo dal prefisso internazionale scritto
+// esplicitamente (+ oppure 00): senza, il numero e' italiano.
+function scomponiTelefono(grezzo) {
+  const pulito = String(grezzo).replace(/[^\d+]/g, "");
+  const conPrefisso = /^(\+|00)/.test(pulito);
+  let c = pulito.replace(/^\+/, "").replace(/^00/, "").replace(/\D/g, "");
+
+  // +39 e' l'Italia: da li' in poi valgono le regole italiane.
+  // Vale anche per chi scrive 39... senza il piu' davanti.
+  if (c.startsWith("39") && (conPrefisso || c.length >= 12)) {
+    return { cifre: c.slice(2), estero: false };
+  }
+  return { cifre: c, estero: conPrefisso };
 }
 
 function sequenzaFinta(c) {
@@ -47,11 +57,25 @@ function sequenzaFinta(c) {
 
 // Ritorna null se va bene, altrimenti il motivo del rifiuto.
 export function problemaTelefono(grezzo) {
-  const c = normalizzaTelefono(grezzo);
+  const { cifre: c, estero } = scomponiTelefono(grezzo);
   if (!c) return "Serve un numero di telefono per confermarti l'ordine.";
-  if (c.length < 6) return "Il numero e' troppo corto: controllalo.";
-  if (c.length > 11) return "Il numero e' troppo lungo: scrivilo senza prefisso internazionale.";
   if (sequenzaFinta(c)) return "Questo numero non sembra reale: serve per confermarti l'ordine.";
+
+  // ------------------------------------------------------------- estero
+  // Qui si va larghi di proposito: i piani di numerazione del mondo sono
+  // duecento e passa, e rifiutare un turista vero costa piu' che accettare
+  // un numero strano. Ci si limita al limite E.164 e ai finti evidenti.
+  if (estero) {
+    if (c.length < 8) return "Il numero internazionale sembra incompleto.";
+    if (c.length > 15) return "Il numero e' troppo lungo per essere valido.";
+    return null;
+  }
+
+  // ------------------------------------------------------------ italiano
+  if (c.length < 6) return "Il numero e' troppo corto: controllalo.";
+  if (c.length > 11) {
+    return "Il numero e' troppo lungo. Se e' straniero, scrivilo con il prefisso internazionale, per esempio +44.";
+  }
 
   // cellulari: 3 seguito da 1-9, nove o dieci cifre in tutto
   if (c[0] === "3") {
@@ -66,8 +90,10 @@ export function problemaTelefono(grezzo) {
     return null;
   }
 
-  // 89x, 199x, 4xx: numeri a pagamento o di servizio, non si richiama nessuno
-  return "Serve un numero di casa o di cellulare: su questo non possiamo richiamarti.";
+  // 89x, 199x, 4xx: numeri a pagamento o di servizio, non si richiama nessuno.
+  // Se e' un numero estero scritto senza prefisso, lo si dice invece di
+  // lasciare la persona a indovinare.
+  return "Serve un numero italiano, oppure uno straniero con il prefisso internazionale davanti (per esempio +44).";
 }
 
 function telefonoValido(t) {
