@@ -21,9 +21,57 @@ function pulisci(v, max, campo) {
   return t;
 }
 
+// ------------------------------------------------------------- telefono
+// Il controllo e' invisibile e istantaneo: nessun codice da digitare, nessuna
+// attesa. Non puo' dimostrare che il numero appartenga davvero a qualcuno,
+// ma butta fuori tutto cio' che un numero italiano non puo' essere: refusi,
+// lunghezze impossibili, prefissi inesistenti e i finti classici.
+//
+// Regola di fondo: meglio accettare un numero strano che rifiutare un
+// cliente vero. Per questo i prefissi mobili non sono un elenco chiuso —
+// AGCOM ne assegna di nuovi, e una lista congelata oggi rifiuterebbe domani
+// una persona in carne e ossa.
+function normalizzaTelefono(grezzo) {
+  let t = String(grezzo).replace(/[^\d+]/g, "");
+  t = t.replace(/^\+?0039/, "").replace(/^\+39/, "");
+  return t.replace(/\D/g, "");
+}
+
+function sequenzaFinta(c) {
+  if (/^(\d)\1+$/.test(c)) return true;              // 3333333333
+  const su = "0123456789012345678901234567890";
+  const giu = "9876543210987654321098765432109";
+  const coda = c.slice(-7);
+  return su.includes(coda) || giu.includes(coda);     // 3491234567, 3987654321
+}
+
+// Ritorna null se va bene, altrimenti il motivo del rifiuto.
+export function problemaTelefono(grezzo) {
+  const c = normalizzaTelefono(grezzo);
+  if (!c) return "Serve un numero di telefono per confermarti l'ordine.";
+  if (c.length < 6) return "Il numero e' troppo corto: controllalo.";
+  if (c.length > 11) return "Il numero e' troppo lungo: scrivilo senza prefisso internazionale.";
+  if (sequenzaFinta(c)) return "Questo numero non sembra reale: serve per confermarti l'ordine.";
+
+  // cellulari: 3 seguito da 1-9, nove o dieci cifre in tutto
+  if (c[0] === "3") {
+    if (c[1] === "0") return "Non esiste un prefisso cellulare che inizia con 30.";
+    if (c.length < 9 || c.length > 10) return "Un cellulare italiano ha 9 o 10 cifre.";
+    return null;
+  }
+
+  // fissi: 0 piu' prefisso di zona, da sei a undici cifre
+  if (c[0] === "0") {
+    if (c.length < 6) return "Il numero fisso e' troppo corto: manca il prefisso di zona?";
+    return null;
+  }
+
+  // 89x, 199x, 4xx: numeri a pagamento o di servizio, non si richiama nessuno
+  return "Serve un numero di casa o di cellulare: su questo non possiamo richiamarti.";
+}
+
 function telefonoValido(t) {
-  const cifre = t.replace(/[^\d]/g, "");
-  return cifre.length >= 8 && cifre.length <= 15;
+  return problemaTelefono(t) === null;
 }
 
 // --------------------------------------------------------------- apertura
@@ -178,9 +226,8 @@ export function verificaCliente(c, adesso) {
   if (nome.length < 2) errore("nome_non_valido", "Serve un nome per confermare l'ordine.");
 
   const telefono = pulisci(c.telefono, 30, "telefono");
-  if (!telefonoValido(telefono)) {
-    errore("telefono_non_valido", "Il numero di telefono non sembra valido: serve per confermarti l'ordine.");
-  }
+  const guaioTel = problemaTelefono(telefono);
+  if (guaioTel) errore("telefono_non_valido", guaioTel);
 
   const modalita = c.modalita === "domicilio" ? "domicilio" : "asporto";
   let indirizzo = "";

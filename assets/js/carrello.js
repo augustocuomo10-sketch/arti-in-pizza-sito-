@@ -61,6 +61,14 @@
     errNome: "We need a name to confirm your order.",
     errTelefono: "That phone number doesn't look right: we need it to confirm.",
     errTelefonoVuoto: "We need your phone: without it we can't confirm the order.",
+    errTelSoloCifre: "Digits only, plus +39 if you like.",
+    errTelCorto: "That number is too short: please check it.",
+    errTelLungo: "That number is too long: leave out the country code.",
+    errTelFinto: "That doesn't look like a real number, and we need to reach you.",
+    errTelPrefisso: "No Italian mobile prefix starts with 30.",
+    errTelCellulare: "An Italian mobile number has 9 or 10 digits.",
+    errTelFisso: "That landline looks short: is the area code missing?",
+    errTelServizio: "We need a home or mobile number: we can't call you back on that one.",
     errIndirizzo: "We need a full address for delivery.",
     errOrario: "Write a time in 24-hour format, like 20:00, or «as soon as possible».",
     errChiusi: "We're closed at that time. Lunch 11:30am–3pm (Mon–Sat), dinner 6:30–10pm.",
@@ -100,6 +108,14 @@
     errNome: "Serve un nome per confermare l'ordine.",
     errTelefono: "Il numero non sembra valido: serve per confermarti l'ordine.",
     errTelefonoVuoto: "Serve il telefono: senza non possiamo confermarti l'ordine.",
+    errTelSoloCifre: "Solo cifre, al massimo con il +39 davanti.",
+    errTelCorto: "Il numero è troppo corto: controllalo.",
+    errTelLungo: "Il numero è troppo lungo: scrivilo senza prefisso internazionale.",
+    errTelFinto: "Questo numero non sembra reale, e ci serve per raggiungerti.",
+    errTelPrefisso: "Non esiste un prefisso cellulare che inizia con 30.",
+    errTelCellulare: "Un cellulare italiano ha 9 o 10 cifre.",
+    errTelFisso: "Il numero fisso sembra corto: manca il prefisso di zona?",
+    errTelServizio: "Serve un numero di casa o di cellulare: su quello non possiamo richiamarti.",
     errIndirizzo: "Per la consegna a domicilio serve l'indirizzo.",
     errOrario: "Scrivi un orario tipo 20:00, oppure «prima possibile».",
     errChiusi: "A quell'ora siamo chiusi. Pranzo 11:30–15:00 (lun–sab), cena 18:30–22:00.",
@@ -668,13 +684,36 @@
     return String(v).replace(/[\s.\-()\/]/g, "").replace(/^\+39/, "").replace(/^0039/, "");
   }
 
+  // Stesse regole del server, cosi' l'errore si vede mentre si scrive invece
+  // che dopo aver premuto invia. Il controllo e' invisibile e istantaneo:
+  // nessun codice via SMS, nessuna attesa. Non dimostra che il numero sia di
+  // qualcuno, ma toglie di mezzo refusi, lunghezze impossibili e finti.
+  function sequenzaFinta(c) {
+    if (/^(\d)\1+$/.test(c)) return true;                 // 3333333333
+    var su = "0123456789012345678901234567890";
+    var giu = "9876543210987654321098765432109";
+    var coda = c.slice(-7);
+    return su.indexOf(coda) !== -1 || giu.indexOf(coda) !== -1;
+  }
+
   function erroreTelefono(v) {
-    var t = normalizzaTelefono(v);
-    if (!t) return T.errTelefonoVuoto;
-    if (/[^0-9]/.test(t)) return "Il numero può contenere solo cifre (e prefisso +39).";
-    if (t.length < 8 || t.length > 15) return "Il numero non sembra completo.";
-    if (!/^[03]/.test(t)) return "Un numero italiano inizia con 3 (cellulare) o 0 (fisso).";
-    return null;
+    var c = normalizzaTelefono(v).replace(/\D/g, "");
+    if (!c) return T.errTelefonoVuoto;
+    if (/[^0-9]/.test(normalizzaTelefono(v))) return T.errTelSoloCifre;
+    if (c.length < 6) return T.errTelCorto;
+    if (c.length > 11) return T.errTelLungo;
+    if (sequenzaFinta(c)) return T.errTelFinto;
+
+    if (c.charAt(0) === "3") {
+      if (c.charAt(1) === "0") return T.errTelPrefisso;
+      if (c.length < 9 || c.length > 10) return T.errTelCellulare;
+      return null;
+    }
+    if (c.charAt(0) === "0") {
+      if (c.length < 6) return T.errTelFisso;
+      return null;
+    }
+    return T.errTelServizio;
   }
 
   // Il preordine e' sempre per la stessa giornata: l'ora deve essere ancora

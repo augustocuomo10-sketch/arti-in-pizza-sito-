@@ -16,17 +16,13 @@
   var RADICE = EN ? "../" : "";
 
   var T = EN ? {
-    titolo: "Cookies for advertising",
-    testo: "This site works without cookies. We would only use Google's, to see which " +
-           "adverts bring in phone calls. Nothing is sent until you choose.",
-    link: "Read the cookie policy",
+    testo: "Cookies only for advertising, only if you accept.",
+    link: "Details",
     si: "Accept",
     no: "Decline"
   } : {
-    titolo: "Cookie per la pubblicità",
-    testo: "Il sito funziona senza cookie. Ne useremmo solo di Google, per capire quali " +
-           "annunci portano telefonate. Finché non scegli non parte nulla.",
-    link: "Leggi l'informativa cookie",
+    testo: "Cookie solo per la pubblicità, e solo se accetti.",
+    link: "Dettagli",
     si: "Accetta",
     no: "Rifiuta"
   };
@@ -108,11 +104,11 @@
     b.setAttribute("role", "dialog");
     b.setAttribute("aria-labelledby", "consenso-titolo");
     b.innerHTML =
-      '<h2 id="consenso-titolo">' + T.titolo + "</h2>" +
-      "<p>" + T.testo + ' <a href="' + RADICE + 'cookie.html">' + T.link + "</a>.</p>" +
+      '<p id="consenso-titolo">' + T.testo +
+      ' <a href="' + RADICE + 'cookie.html">' + T.link + "</a></p>" +
       '<div class="tasti">' +
-      '<button type="button" class="btn btn-outline" data-consenso="no">' + T.no + "</button>" +
-      '<button type="button" class="btn btn-primary" data-consenso="si">' + T.si + "</button>" +
+      '<button type="button" data-consenso="no">' + T.no + "</button>" +
+      '<button type="button" class="si" data-consenso="si">' + T.si + "</button>" +
       "</div>";
     document.body.appendChild(b);
     segnalaIngombro(b);
