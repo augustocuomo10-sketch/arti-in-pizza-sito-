@@ -226,7 +226,7 @@ export default {
 
       } catch (e) {
         if (e instanceof ErroreVerifica) {
-          return json({ errore: e.message, codice: e.codice }, 422, origine);
+          return json({ errore: e.message, codice: e.codice, dettagli: e.dettagli }, 422, origine);
         }
         return json({ errore: "Non riusciamo ad aprire il pagamento. Riprova, oppure scegli il pagamento alla consegna." }, 502, origine);
       }
@@ -277,7 +277,7 @@ export default {
 
       } catch (e) {
         if (e instanceof ErroreVerifica) {
-          return json({ errore: e.message, codice: e.codice }, 422, origine);
+          return json({ errore: e.message, codice: e.codice, dettagli: e.dettagli }, 422, origine);
         }
         return json({ errore: "Non riusciamo a registrare l'ordine. Chiamaci allo 031 300809." }, 502, origine);
       }

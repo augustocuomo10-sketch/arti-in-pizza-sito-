@@ -51,9 +51,11 @@
     note: "Notes", notePlaceholder: "Allergies, doorbell, dough preferences…",
     pagamento: "How would you like to pay",
     pagIntro: "Both ways work for pickup and delivery alike: pay now by card, or in cash when you get it.",
-    contanti: "Cash on delivery or pickup", online: "Card online",
-    allergeni: "For allergies and intolerances see the ",
-    allergeniLink: "allergen table (PDF)", allergeniFine: ", and tell us in the notes.",
+    contantiRitiro: "Cash when you pick it up", contantiConsegna: "Cash to the driver",
+    contanti: "Cash", online: "Card online",
+    allergeni: "Allergies or intolerances? Check the ",
+    allergeniLink: "allergen table (PDF)",
+    allergeniFine: " and write it in the notes: we call you back before confirming.",
     concludi: "Place the order", concludiPaga: "Pay ",
     sospesi: "Orders paused",
     notaContanti: "We send the order to the pizzeria and confirm the timing. You will pay in cash when you collect it or when it arrives.",
@@ -101,9 +103,11 @@
     note: "Note", notePlaceholder: "Allergie, citofono, preferenze sull'impasto…",
     pagamento: "Come vuoi pagare",
     pagIntro: "Vanno bene entrambi, sia per il ritiro sia per la consegna: paghi subito con carta, oppure in contanti quando lo ricevi.",
-    contanti: "In contanti alla consegna o al ritiro", online: "Online con carta",
-    allergeni: "Per allergie e intolleranze consulta la ",
-    allergeniLink: "tabella allergeni (PDF)", allergeniFine: ", e scrivilo nelle note.",
+    contantiRitiro: "In contanti al ritiro", contantiConsegna: "In contanti alla consegna",
+    contanti: "In contanti", online: "Online con carta",
+    allergeni: "Allergie o intolleranze? Consulta la ",
+    allergeniLink: "tabella allergeni (PDF)",
+    allergeniFine: " e scrivicelo nelle note: prima di confermare ti richiamiamo.",
     concludi: "Concludi l'ordine", concludiPaga: "Concludi e paga ",
     sospesi: "Ordini sospesi",
     notaContanti: "Inviamo l'ordine in pizzeria e ti confermiamo noi i tempi. Pagherai in contanti quando ritiri o quando arriva.",
@@ -394,11 +398,13 @@
       '<div class="passo" data-passo="3" hidden>' +
       '<fieldset class="carrello-pagamento"><legend>' + T.pagamento + '</legend>' +
       '<p class="pag-intro">' + T.pagIntro + '</p>' +
-      '<label><input type="radio" name="pagamento" value="contanti" checked> ' + T.contanti + '</label>' +
+      '<label><input type="radio" name="pagamento" value="contanti" checked> <span class="et-contanti">' + T.contantiRitiro + '</span></label>' +
       '<label class="pag-online"><input type="radio" name="pagamento" value="online"' +
       (CFG.apiPagamenti ? "" : " disabled") + '> ' + T.online + '' +
       (CFG.apiPagamenti ? "" : ' <span class="presto">— attivo a breve</span>') + "</label></fieldset>" +
-      '<p class="carrello-allergeni">Allergie o intolleranze? Consulta la <a href="' + CFG.pdfAllergeni + '" target="_blank" rel="noopener">tabella allergeni</a> e scrivicelo nelle note: prima di confermare ti richiamiamo.</p>' +
+      '<p class="carrello-allergeni">' + T.allergeni +
+      '<a href="' + CFG.pdfAllergeni + '" target="_blank" rel="noopener">' + T.allergeniLink + '</a>' +
+      T.allergeniFine + '</p>' +
       '<button type="submit" class="btn btn-primary btn-block btn-invia"' +
       (stato.aperto || stato.preordinabile ? "" : " disabled") + ">" +
       (stato.aperto ? T.concludi : (stato.preordinabile ? T.preordina : T.sospesi)) + "</button>" +
@@ -454,8 +460,11 @@
     if (d.modalita === "domicilio" && !d.indirizzo) {
       problemi.push([form.querySelector('[name="indirizzo"]'), T.errIndirizzo]);
     }
+    // Si riscrive lo stato di OGNI campo, non solo di quelli rotti: altrimenti
+    // chi corregge un campo continua a vedere il vecchio errore sotto, e non
+    // capisce piu' cosa manca davvero.
+    problemi.forEach(function (x) { mostraErroreCampo(x[0], x[1]); });
     var rotti = problemi.filter(function (x) { return x[1]; });
-    rotti.forEach(function (x) { mostraErroreCampo(x[0], x[1]); });
     if (rotti.length) { rotti[0][0].focus(); return false; }
     return true;
   }
@@ -506,8 +515,20 @@
       campoInd.querySelector("input").required = domicilio;
       totFinale.textContent = euro(totaleRighe() + (domicilio ? CFG.consegnaSupplemento : 0));
     }
-    radios.forEach(function (r) { r.addEventListener("change", aggiornaTotale); });
+    // L'etichetta del contante deve dire dove si paga davvero: chi ha scelto
+    // il ritiro non deve leggere "alla consegna", che e' la fonte di confusione.
+    function aggiornaEtichettaContante() {
+      var et = pannello.querySelector(".et-contanti");
+      if (!et) return;
+      var domicilio = pannello.querySelector('input[name="modalita"]:checked').value === "domicilio";
+      et.textContent = domicilio ? T.contantiConsegna : T.contantiRitiro;
+    }
+    radios.forEach(function (r) {
+      r.addEventListener("change", aggiornaTotale);
+      r.addEventListener("change", aggiornaEtichettaContante);
+    });
     aggiornaTotale();
+    aggiornaEtichettaContante();
 
     agganciaSuggerimenti(campoInd.querySelector("input"));
     agganciaVerificheCampi();
@@ -617,7 +638,7 @@
       .then(function (r) { return r.json().then(function (b) { return { stato: r.status, corpo: b }; }); })
       .then(function (res) {
         if (res.stato !== 200 || !res.corpo.riferimento) {
-          throw new Error((res.corpo && res.corpo.errore) || "risposta non valida");
+          throw guaioDalServer(res.corpo);
         }
         ricordaOrdine(res.corpo.riferimento);
         svuota();
@@ -627,7 +648,7 @@
       .catch(function (err) {
         btn.disabled = false;
         btn.textContent = testoPrima;
-        mostraErrore(err.message);
+        mostraErroreServer(err);
       });
   }
 
@@ -669,14 +690,13 @@
           location.href = res.corpo.url;
           return;
         }
-        // 422 = l'ordine non ha superato le verifiche del server: il messaggio
-        // e' scritto per il cliente, quindi si mostra cosi' com'e'.
-        throw new Error((res.corpo && res.corpo.errore) || "risposta non valida");
+        // 422 = l'ordine non ha superato le verifiche del server.
+        throw guaioDalServer(res.corpo);
       })
       .catch(function (err) {
         btn.disabled = false;
-        btn.textContent = "Invia l'ordine su WhatsApp";
-        mostraErrore(err.message);
+        btn.textContent = testoPrima;
+        mostraErroreServer(err);
       });
   }
 
@@ -927,6 +947,73 @@
     });
 
     input.addEventListener("blur", function () { setTimeout(chiudi, 120); });
+  }
+
+  // Il server parla italiano: sulle pagine inglesi i suoi messaggi arriverebbero
+  // cosi' come sono. Traduciamo per codice, che e' stabile, e usiamo i dettagli
+  // numerici che il server allega (per esempio i minuti reali di distanza).
+  // Se il codice non lo conosciamo, si mostra il messaggio del server: meglio
+  // una frase in italiano che nessuna spiegazione.
+  // L'errore che arriva dal server porta un codice e a volte dei numeri:
+  // vanno conservati fino a chi mostra il messaggio, altrimenti resta solo
+  // il testo italiano e la traduzione non puo' avvenire.
+  function guaioDalServer(corpo) {
+    var e = new Error((corpo && corpo.errore) || "risposta non valida");
+    e.codice = corpo && corpo.codice;
+    e.dettagli = corpo && corpo.dettagli;
+    e.errore = corpo && corpo.errore;
+    return e;
+  }
+
+  function traduciErroreServer(corpo) {
+    var c = corpo && corpo.codice;
+    var d = (corpo && corpo.dettagli) || {};
+    if (!c) return (corpo && corpo.errore) || "";
+
+    if (c === "fuori_zona") {
+      if (d.minuti) {
+        return EN
+          ? "Too far for delivery: that address is about " + d.minuti + " minutes away by car, " +
+            "and we only deliver within " + (d.minutiMax || 11) + " minutes. You can still order it for pickup, " +
+            "or call us on 031 300809."
+          : "Troppo lontano per la consegna: da noi a quell'indirizzo ci vogliono circa " + d.minuti +
+            " minuti in auto, e noi consegniamo entro " + (d.minutiMax || 11) + ". " +
+            "Puoi comunque ordinare con ritiro in pizzeria, oppure chiamaci allo 031 300809.";
+      }
+      return EN
+        ? "That address is outside our delivery area. You can order it for pickup, or call us on 031 300809."
+        : "Quell'indirizzo è fuori dalla nostra zona di consegna. Puoi ordinare con ritiro in pizzeria, oppure chiamaci allo 031 300809.";
+    }
+    if (c === "indirizzo_non_trovato") {
+      return EN
+        ? "We can't place that address. Check street, number and town — and remember we only deliver within " +
+          "11 minutes of Via Carloni, so addresses further out won't be found. Or call us on 031 300809."
+        : "Non riusciamo a individuare quell'indirizzo. Controlla via, numero civico e comune — e tieni presente " +
+          "che consegniamo solo entro 11 minuti da Via Carloni, quindi gli indirizzi più lontani non vengono trovati. " +
+          "Oppure chiamaci allo 031 300809.";
+    }
+    if (c === "sotto_minimo") {
+      return EN ? "That's below the minimum for delivery." : (corpo.errore || "");
+    }
+    return corpo.errore || "";
+  }
+
+  // Gli errori che riguardano l'indirizzo vanno mostrati SUL campo
+  // dell'indirizzo, che sta nel passo 2: farli comparire nel passo del
+  // pagamento lascia il cliente a chiedersi cosa dovrebbe correggere.
+  function mostraErroreServer(corpo) {
+    var testo = traduciErroreServer(corpo);
+    var c = corpo && corpo.codice;
+    if (c === "fuori_zona" || c === "indirizzo_non_trovato") {
+      var campo = pannello.querySelector('[name="indirizzo"]');
+      if (campo) {
+        mostraPasso(2);
+        mostraErroreCampo(campo, testo);
+        campo.focus();
+        return;
+      }
+    }
+    mostraErrore(testo);
   }
 
   function mostraErrore(testo) {

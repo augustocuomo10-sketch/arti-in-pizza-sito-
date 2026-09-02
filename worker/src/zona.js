@@ -120,7 +120,8 @@ export async function verificaZonaConsegna(indirizzo, env) {
     throw new ErroreVerifica("fuori_zona",
       `Da noi a questo indirizzo ci vogliono circa ${Math.round(minuti)} minuti in auto, ` +
       `oltre gli ${ZONA.minutiMax} che copriamo con le consegne. ` +
-      "Puoi ordinare con ritiro in pizzeria, oppure chiamaci allo 031 300809.");
+      "Puoi ordinare con ritiro in pizzeria, oppure chiamaci allo 031 300809."),
+      { minuti: Math.round(minuti), minutiMax: ZONA.minutiMax };
   }
 
   return {

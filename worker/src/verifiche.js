@@ -5,9 +5,12 @@
 import { CATALOGO, REGOLE } from "./catalogo.js";
 
 export class ErroreVerifica extends Error {
-  constructor(codice, messaggio) {
+  // I dettagli servono al carrello per riscrivere il messaggio nella lingua
+  // del cliente: il codice dice cosa e' successo, i dettagli con che numeri.
+  constructor(codice, messaggio, dettagli) {
     super(messaggio);
     this.codice = codice;
+    this.dettagli = dettagli || null;
   }
 }
 
