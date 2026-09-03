@@ -50,6 +50,31 @@
   function gtag() { window.dataLayer.push(arguments); }
   window.gtag = window.gtag || gtag;
 
+  /* Consent Mode v2 — i default partono negati, cosi' nulla viene inviato
+     prima della scelta dell'utente. Va prima di ogni gtag('config'), altrimenti
+     Google Ads perde i dati di conversione modellati per gli utenti SEE.
+     L'aggiornamento arriva da consenso.js all'accettazione o al rifiuto. */
+  window.gtag("consent", "default", {
+    ad_storage: "denied",
+    ad_user_data: "denied",
+    ad_personalization: "denied",
+    analytics_storage: "denied",
+    wait_for_update: 500
+  });
+  // Scelta gia' memorizzata: riallineiamo subito, cosi' il config parte con lo
+  // stato giusto invece di aspettare i 500 ms della finestra di attesa.
+  // consenso.js pubblica window.consensoDeciso: true se ha gia' letto una scelta,
+  // qualunque sia. In quel caso mandiamo un update esplicito (granted o denied).
+  if (window.consensoDeciso) {
+    var s = window.consensoMarketing ? "granted" : "denied";
+    window.gtag("consent", "update", {
+      ad_storage: s,
+      ad_user_data: s,
+      ad_personalization: s,
+      analytics_storage: s
+    });
+  }
+
   var tagId = CONFIG.GA4_ID || CONFIG.ADS_ID;
   var acceso = false;
 

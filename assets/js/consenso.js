@@ -36,6 +36,9 @@
 
   // Lo stato serve a tracking.js, che si carica subito dopo questo file.
   window.consensoMarketing = letto() === "si";
+  // Serve a distinguere "non ha ancora scelto" da "ha scelto no": nel secondo
+  // caso Consent Mode v2 vuole comunque un update esplicito a denied.
+  window.consensoDeciso = letto() === "si" || letto() === "no";
 
   // Ritirare il consenso deve valere anche per i cookie gia' installati,
   // altrimenti il rifiuto e' solo una promessa per il futuro. Google li
@@ -57,10 +60,28 @@
     });
   }
 
+  // Propaga la scelta a Google (Consent Mode v2). Va chiamata sia
+  // all'accettazione sia al rifiuto: nel secondo caso Google ha comunque
+  // bisogno del segnale esplicito per non lavorare in modalita' "in attesa".
+  function aggiornaConsensoGoogle(accettato) {
+    var stato = accettato ? "granted" : "denied";
+    window.dataLayer = window.dataLayer || [];
+    function gtagLocale() { window.dataLayer.push(arguments); }
+    var g = window.gtag || gtagLocale;
+    g("consent", "update", {
+      ad_storage: stato,
+      ad_user_data: stato,
+      ad_personalization: stato,
+      analytics_storage: stato
+    });
+  }
+
   function decidi(valore) {
     scrivi(valore);
     if (valore !== "si") ripulisciCookieGoogle();
     window.consensoMarketing = valore === "si";
+    window.consensoDeciso = true;
+    aggiornaConsensoGoogle(window.consensoMarketing);
     var b = document.getElementById("consenso");
     if (b) b.hidden = true;
     liberaIngombro();
