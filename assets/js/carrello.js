@@ -882,7 +882,7 @@
     input.setAttribute("aria-expanded", "false");
     input.setAttribute("aria-autocomplete", "list");
 
-    var attesa = null, voci = [], scelto = -1;
+    var attesa = null, voci = [], scelto = -1, ultimoAbort = null;
 
     function chiudi() {
       elenco.hidden = true; elenco.innerHTML = ""; voci = []; scelto = -1;
@@ -917,6 +917,10 @@
     input.addEventListener("input", function () {
       var q = input.value.trim();
       clearTimeout(attesa);
+      // Una nuova digitazione supera la richiesta precedente: se e' ancora
+      // in volo la abortiamo, cosi' non arriva a sovrascrivere quella nuova
+      // (Photon a volte risponde fuori ordine).
+      if (ultimoAbort) { try { ultimoAbort.abort(); } catch (e) {} ultimoAbort = null; }
       if (q.length < 4) { chiudi(); return; }
       // si aspetta la pausa di digitazione: evita una richiesta per ogni tasto
       attesa = setTimeout(function () {
@@ -925,9 +929,17 @@
         // che per gli indirizzi italiani e' esattamente cio' che serve.
         var url = (CONF.endpointIndirizzi || "https://photon.komoot.io/api/") +
           "?q=" + encodeURIComponent(q) + "&lat=45.8044&lon=9.0929&limit=5";
-        fetch(url)
-          .then(function (r) { return r.json(); })
+        // Photon e' un servizio pubblico senza SLA: se e' giu' o lento, il
+        // campo deve restare utilizzabile a mano. AbortController + timeout
+        // di 4 s ci danno la garanzia di non lasciare mai richieste in sospeso.
+        var ctrl = ("AbortController" in window) ? new AbortController() : null;
+        ultimoAbort = ctrl;
+        var stop = setTimeout(function () { if (ctrl) try { ctrl.abort(); } catch (e) {} }, 4000);
+        fetch(url, ctrl ? { signal: ctrl.signal } : undefined)
+          .then(function (r) { return r.ok ? r.json() : null; })
           .then(function (d) {
+            clearTimeout(stop);
+            if (!d) { chiudi(); return; }
             voci = (d.features || [])
               .filter(function (f) { return f.properties && f.properties.countrycode === "IT"; })
               .map(function (f) { return etichetta(f.properties); })
@@ -935,7 +947,13 @@
             scelto = -1;
             disegna();
           })
-          .catch(chiudi);
+          .catch(function () {
+            // Rete giu', timeout, richiesta abortita: silenziosamente non
+            // mostriamo suggerimenti. Nessun errore in console visibile,
+            // nessun blocco del pulsante "Avanti": si va avanti a mano.
+            clearTimeout(stop);
+            chiudi();
+          });
       }, 300);
     });
 
