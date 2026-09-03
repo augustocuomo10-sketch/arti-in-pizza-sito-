@@ -74,49 +74,60 @@
     });
   });
 
-  // Conteggio animato: elementi con [data-count-to] (es. "302", "4.7")
+  // Conteggio animato: elementi con [data-count-to] (es. "302", "4.7").
+  // Regola: il valore finale è già a schermo (HTML statico + questa riga),
+  // così Google indicizza il numero giusto e chi scorre veloce non legge "3 anni".
+  // L'animazione da 0 parte solo dopo che l'IntersectionObserver conferma
+  // che si può animare — mai come stato iniziale visibile.
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var countEls = document.querySelectorAll("[data-count-to]");
-  function runCount(el) {
-    var target = parseFloat(el.getAttribute("data-count-to"));
-    var decimals = el.getAttribute("data-decimals") ? parseInt(el.getAttribute("data-decimals"), 10) : 0;
-    var suffix = el.getAttribute("data-suffix") || "";
-    if (reduceMotion || isNaN(target)) {
-      el.textContent = target.toFixed(decimals).replace(".", ",") + suffix;
-      return;
+
+  // Anni di attività calcolati da un'unica costante: il numero non invecchia.
+  var ANNO_APERTURA = 1997;
+  var anniAttivita = new Date().getFullYear() - ANNO_APERTURA;
+
+  function formatta(value, decimals, suffix) {
+    return value.toFixed(decimals).replace(".", ",") + suffix;
+  }
+  function leggiTarget(el) {
+    // Se l'elemento è il contatore degli anni, riallinea al valore corrente.
+    if (el.dataset.contatore === "anni") {
+      el.setAttribute("data-count-to", String(anniAttivita));
     }
+    return parseFloat(el.getAttribute("data-count-to"));
+  }
+  function runCount(el, target, decimals, suffix) {
     var duration = 1400;
     var start = null;
     function step(ts) {
       if (start === null) start = ts;
       var progress = Math.min((ts - start) / duration, 1);
       var eased = 1 - Math.pow(1 - progress, 3);
-      var value = target * eased;
-      el.textContent = value.toFixed(decimals).replace(".", ",") + suffix;
+      el.textContent = formatta(target * eased, decimals, suffix);
       if (progress < 1) requestAnimationFrame(step);
+      else el.textContent = formatta(target, decimals, suffix);
     }
     requestAnimationFrame(step);
   }
-  if (countEls.length) {
-    if ("IntersectionObserver" in window) {
-      var countIo = new IntersectionObserver(
-        function (entries) {
-          entries.forEach(function (entry) {
-            if (entry.isIntersecting) {
-              runCount(entry.target);
-              countIo.unobserve(entry.target);
-            }
-          });
-        },
-        { threshold: 0.4 }
-      );
-      countEls.forEach(function (el) {
-        countIo.observe(el);
+  countEls.forEach(function (el) {
+    var target = leggiTarget(el);
+    var decimals = el.getAttribute("data-decimals") ? parseInt(el.getAttribute("data-decimals"), 10) : 0;
+    var suffix = el.getAttribute("data-suffix") || "";
+    if (isNaN(target)) return;
+    // Prima cosa: valore corretto già a schermo. Nessuno vede lo zero.
+    el.textContent = formatta(target, decimals, suffix);
+    if (reduceMotion) return;
+    if (!("IntersectionObserver" in window)) return;
+    var io = new IntersectionObserver(function (entries, obs) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          runCount(el, target, decimals, suffix);
+          obs.disconnect();
+        }
       });
-    } else {
-      countEls.forEach(runCount);
-    }
-  }
+    }, { threshold: 0.4 });
+    io.observe(el);
+  });
 
   // Reveal on scroll (include anche le griglie a cascata .reveal-stagger)
   var revealEls = document.querySelectorAll(".reveal-on-scroll, .reveal-stagger");
