@@ -8,7 +8,8 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="assets/css/styles.css?v=202609020932">
 <script src="assets/js/consenso.js?v=202609031720"></script>
-<script src="assets/js/ordine-corso.js?v=202609020932" defer></script>
+<script src="assets/js/configurazione.js?v=202609031720"></script>
+<script src="assets/js/ordine-corso.js?v=202609031720" defer></script>
 
 <!-- Icona del sito -->
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -50,7 +51,7 @@
 // Lo stato del pagamento non si deduce dal fatto di essere atterrati qui:
 // si chiede al server, che a sua volta lo chiede a SumUp.
 (function () {
-  var API = "https://bitter-firefly-4508.augusto-cuomo10.workers.dev"; // stesso valore di CFG.apiPagamenti in assets/js/carrello.js
+  var API = (window.AIP_CONFIG && window.AIP_CONFIG.endpointOrdini) || "";
   var box = document.getElementById("esito");
   var rif = new URLSearchParams(location.search).get("ref") || "";
 

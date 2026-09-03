@@ -7,16 +7,17 @@
   "use strict";
 
   // ---------------------------------------------------------------- config
+  // Gli endpoint e il numero WhatsApp arrivano da assets/js/configurazione.js:
+  // se manca (script non caricato) restiamo con valori vuoti, cosi' il carrello
+  // funziona in "solo alla consegna" invece di rompersi.
+  var CONF = window.AIP_CONFIG || {};
   var CFG = {
-    // Cellulare della pizzeria, formato internazionale senza + e senza spazi.
-    // Il fisso 031 300809 non puo' ricevere WhatsApp.
-    // Quando l'ordine passera' al telefono dedicato, basta cambiare questa riga.
-    whatsapp: "393290664551",
-    // Endpoint del Worker Cloudflare che verifica l'ordine e apre il checkout SumUp.
-    // Es. "https://arti-in-pizza-ordini.<sottodominio>.workers.dev"
+    // Cellulare della pizzeria per il fallback WhatsApp.
+    whatsapp: CONF.numeroWhatsApp || "",
+    // Endpoint del Worker Cloudflare che verifica l'ordine e apre SumUp.
     // Finche' e' vuoto, il pagamento online resta disattivato e si ordina
     // solo con pagamento alla consegna: nessun rischio di incassi a vuoto.
-    apiPagamenti: "https://bitter-firefly-4508.augusto-cuomo10.workers.dev",
+    apiPagamenti: CONF.endpointOrdini || "",
     // percorso relativo: funziona sia da /menu.html sia da /en/menu.html
     pdfAllergeni: location.pathname.indexOf("/en/") === 0 ? "../assets/doc/allergeni.pdf" : "assets/doc/allergeni.pdf",
     consegnaSupplemento: 2.0,
@@ -922,8 +923,8 @@
         // niente lang=it: Photon accetta solo default/de/en/fr e altrimenti
         // risponde 400. Senza il parametro restituisce i nomi originali,
         // che per gli indirizzi italiani e' esattamente cio' che serve.
-        var url = "https://photon.komoot.io/api/?q=" + encodeURIComponent(q) +
-          "&lat=45.8044&lon=9.0929&limit=5";
+        var url = (CONF.endpointIndirizzi || "https://photon.komoot.io/api/") +
+          "?q=" + encodeURIComponent(q) + "&lat=45.8044&lon=9.0929&limit=5";
         fetch(url)
           .then(function (r) { return r.json(); })
           .then(function (d) {

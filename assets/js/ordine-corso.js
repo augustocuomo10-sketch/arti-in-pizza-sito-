@@ -13,7 +13,8 @@
   "use strict";
 
   var CHIAVE = "aip_ordine_corso";
-  var API = "https://bitter-firefly-4508.augusto-cuomo10.workers.dev";
+  var API = (window.AIP_CONFIG && window.AIP_CONFIG.endpointOrdini) || "";
+  if (!API) return;   // niente Worker configurato: la barra non serve
   // Oltre mezza giornata un ordine e' concluso comunque: tenerlo li' sarebbe
   // solo un cartello che non se ne va piu'.
   var DURATA = 12 * 60 * 60 * 1000;
