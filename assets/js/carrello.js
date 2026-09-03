@@ -47,6 +47,9 @@
     ritiro: "Pick up in store", domicilio: "Home delivery (+",
     piattiRiga: "Items", consegna: "Delivery", totale: "Total",
     nome: "Full name", telefono: "Phone", indirizzo: "Delivery address",
+    email: "Email (optional) — for the order confirmation",
+    emailSegno: "you@example.com",
+    errEmail: "That email looks off — check it, or leave it empty.",
     telSegno: "e.g. +44 7700 900461 — foreign numbers welcome",
     orario: "What time", orarioSegno: "e.g. 20:00 (24h), or «as soon as possible»",
     note: "Notes", notePlaceholder: "Allergies, doorbell, dough preferences…",
@@ -99,6 +102,9 @@
     ritiro: "Ritiro in pizzeria", domicilio: "Consegna a domicilio (+",
     piattiRiga: "Piatti", consegna: "Consegna", totale: "Totale",
     nome: "Nome e cognome", telefono: "Telefono", indirizzo: "Indirizzo di consegna",
+    email: "Email (facoltativa) — per la conferma d'ordine",
+    emailSegno: "nome@esempio.it",
+    errEmail: "L'email non sembra valida — controllala, oppure lasciala vuota.",
     telSegno: "es. 333 1234567 — straniero? mettici il +prefisso",
     orario: "A che ora", orarioSegno: "es. 20:00, oppure «prima possibile»",
     note: "Note", notePlaceholder: "Allergie, citofono, preferenze sull'impasto…",
@@ -384,6 +390,10 @@
     h += '<div class="passo" data-passo="2" hidden>' +
       '<label>' + T.nome + '<input type="text" name="nome" required autocomplete="name"></label>' +
       '<label>' + T.telefono + '<input type="tel" name="telefono" required autocomplete="tel" inputmode="tel" placeholder="' + T.telSegno + '"></label>' +
+      // L'email e' facoltativa: se il cliente la lascia, il Worker gli manda
+      // la conferma d'ordine — e' la cosa che rende il canale diretto migliore
+      // delle piattaforme di delivery. Se vuoto, si procede senza fastidio.
+      '<label>' + T.email + '<input type="email" name="email" autocomplete="email" inputmode="email" placeholder="' + T.emailSegno + '"></label>' +
       '<label class="campo-indirizzo" hidden>' + T.indirizzo + '<input type="text" name="indirizzo" autocomplete="street-address"></label>' +
       '<label' + (stato.preordinabile ? ' class="campo-preordine"' : "") + ">" + T.orario +
       (stato.preordinabile ? '<small class="obbligo">' + T.orarioObbligatorio + "</small>" : "") +
@@ -449,6 +459,7 @@
     var d = {
       nome: (form.querySelector('[name="nome"]').value || "").trim(),
       telefono: (form.querySelector('[name="telefono"]').value || "").trim(),
+      email: (form.querySelector('[name="email"]').value || "").trim(),
       orario: (form.querySelector('[name="orario"]').value || "").trim(),
       indirizzo: (form.querySelector('[name="indirizzo"]').value || "").trim(),
       modalita: form.querySelector('input[name="modalita"]:checked').value
@@ -456,6 +467,7 @@
     var problemi = [
       [form.querySelector('[name="nome"]'), erroreNome(d.nome)],
       [form.querySelector('[name="telefono"]'), erroreTelefono(d.telefono)],
+      [form.querySelector('[name="email"]'), erroreEmail(d.email)],
       [form.querySelector('[name="orario"]'), erroreOrario(d.orario)]
     ];
     if (d.modalita === "domicilio" && !d.indirizzo) {
@@ -579,6 +591,7 @@
     righe.push("");
     righe.push("Nome: " + d.nome);
     righe.push("Telefono: " + d.telefono);
+    if (d.email) righe.push("Email: " + d.email);
     if (d.orario) righe.push("Orario: " + d.orario);
     if (d.note) righe.push("Note: " + d.note);
     return righe.join("\n");
@@ -586,9 +599,16 @@
 
   function inviaOrdine(form) {
     var f = new FormData(form);
+    // TODO(worker): se il campo email e' presente, il Worker deve mandare la
+    // mail di conferma d'ordine (mittente ordini@artiinpizza.com, oggetto con
+    // il riferimento, ricapitolo delle voci + tempi). Vedi worker/src/index.js:
+    // aggiungere una chiamata al provider di posta (es. Resend, Mailchannels)
+    // subito dopo aver registrato l'ordine. Il segreto va nelle env del Worker,
+    // non qui.
     var d = {
       nome: (f.get("nome") || "").trim(),
       telefono: (f.get("telefono") || "").trim(),
+      email: (f.get("email") || "").trim(),
       indirizzo: (f.get("indirizzo") || "").trim(),
       orario: (f.get("orario") || "").trim(),
       note: (f.get("note") || "").trim(),
@@ -598,6 +618,7 @@
     var problemi = [
       [form.querySelector('[name="nome"]'), erroreNome(d.nome)],
       [form.querySelector('[name="telefono"]'), erroreTelefono(d.telefono)],
+      [form.querySelector('[name="email"]'), erroreEmail(d.email)],
       [form.querySelector('[name="orario"]'), erroreOrario(d.orario)]
     ].filter(function (x) { return x[1]; });
     if (problemi.length) {
@@ -798,6 +819,18 @@
     var t = String(v).trim();
     if (t.length < 2) return T.errNome;
     if (t.length > 80) return "Nome troppo lungo.";
+    return null;
+  }
+
+  // Validazione email permissiva: se vuoto, va bene (e' facoltativa).
+  // Se compilato, chiediamo solo qualcosa @ qualcosa . qualcosa — la regola
+  // stretta ha piu' falsi positivi che veri: la RFC 5322 ammette forme che
+  // in pratica non usa nessuno, e il vero test e' se il messaggio arriva.
+  function erroreEmail(v) {
+    var t = String(v || "").trim();
+    if (!t) return null;
+    if (t.length > 120) return T.errEmail;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) return T.errEmail;
     return null;
   }
 
