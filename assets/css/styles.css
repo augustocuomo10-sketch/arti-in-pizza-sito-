@@ -1648,16 +1648,17 @@ body.con-ordine-corso.consenso-aperto .carrello-fab{
 }
 .exploded-hero p{color:var(--ink-soft); opacity:.85; max-width:52ch; margin:0 auto 22px;}
 .exploded-scene{
-  position:relative; height:520px; max-width:560px; margin:0 auto;
+  position:relative; height:380px; max-width:560px; margin:20px auto 0;
 }
 .exploded-scene .layer{
   position:absolute; left:50%; transform:translateX(-50%);
   opacity:0; animation:layer-in .9s cubic-bezier(.2,.8,.2,1) forwards;
 }
-.exploded-scene .layer.base{ bottom:0; width:78%; animation-delay:.05s; }
-.exploded-scene .layer.sauce{ bottom:110px; width:66%; animation-delay:.25s; }
-.exploded-scene .layer.cheese{ bottom:210px; width:60%; animation-delay:.45s; }
-.exploded-scene .layer.pepperoni{ bottom:320px; width:50%; animation-delay:.65s; }
+.exploded-scene .layer.base{ bottom:0; width:82%; animation-delay:.05s; }
+.exploded-scene .layer.sauce{ bottom:90px; width:74%; animation-delay:.25s; }
+.exploded-scene .layer.cheese{ bottom:170px; width:70%; animation-delay:.45s; }
+.exploded-scene .layer.pepperoni{ bottom:250px; width:66%; animation-delay:.65s; }
+.exploded-scene .layer svg,
 .exploded-scene .layer img{width:100%; height:auto; display:block; filter:drop-shadow(0 10px 20px rgba(0,0,0,.5));}
 @keyframes layer-in{
   0%   { opacity:0; transform:translate(-50%, 40px);}
