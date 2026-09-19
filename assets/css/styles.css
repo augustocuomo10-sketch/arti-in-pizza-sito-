@@ -1,4 +1,7 @@
 /* Arti in Pizza — design tokens condivisi (vedi documento Fase 1) */
+/* Restyle "poster trattoria" 2026-09-19: palette monocroma rosso/panna,
+   display slab retrò (Alfa Slab One), scacchiere marcate. */
+@import url("https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Fraunces:ital,opsz,wght@0,9..144,600..900;1,9..144,600..900&display=swap");
 
 @font-face{
   font-family:"Fredoka";
@@ -23,26 +26,27 @@
 }
 
 :root{
-  --cream:#FAFDFE;
-  --cream-2:#E4F4FA;
-  --ink:#152430;
-  --ink-soft:#4C6072;
-  --blue:#1467A6;
-  --blue-ink:#0E3F63;
-  --azzurro:#1FB2E0;
-  --red:#E0392A;
-  --red-ink:#B32E21;
-  --green:#3F8F5C;
-  --line:rgba(20,103,166,0.16);
+  /* Palette poster trattoria: rosso mattone su carta panna */
+  --cream:#FBF3E4;       /* carta */
+  --cream-2:#F1E4C7;     /* carta invecchiata */
+  --ink:#3A0F0C;         /* inchiostro scuro rossastro */
+  --ink-soft:#7A2521;    /* rosso attenuato per testi secondari */
+  --blue:#C93832;        /* colore brand principale (era blu, ora rosso mattone) */
+  --blue-ink:#9A211C;    /* rosso profondo per hover/link */
+  --azzurro:#D9A94E;     /* accento oro/senape (era azzurro) */
+  --red:#C93832;
+  --red-ink:#9A211C;
+  --green:#3F7A47;       /* basilico, per piccoli accenti */
+  --line:rgba(154,33,28,0.18);
   --radius-sm:6px;
   --radius:12px;
   --radius-lg:18px;
   --measure:640px;
   --header-h:64px;
-  /* blu profondo fisso — non cambia con il tema, per le bande "texture di marca" */
-  --deep:#0F2C46;
-  --deep-2:#123A5C;
-  --deep-text:#F4FAFD;
+  /* Banda "texture di marca": rosso profondo, contrasta sulla carta */
+  --deep:#9A211C;
+  --deep-2:#7A1A16;
+  --deep-text:#FBF3E4;
 }
 
 /* ---------- texture di marca: pizza, pennello, mestolo — stile canvas ripetuto ----------
@@ -60,30 +64,35 @@
 
 @media (prefers-color-scheme: dark){
   :root{
-    --cream:#0E1A22;
-    --cream-2:#16323F;
-    --ink:#E7F3F8;
-    --ink-soft:#9FBACB;
-    --blue:#4FB0E6;
-    --blue-ink:#8AD4F5;
-    --azzurro:#38C7F0;
+    --cream:#241010;
+    --cream-2:#3A1614;
+    --ink:#F5E6C6;
+    --ink-soft:#D9BF88;
+    --blue:#E85E1F;
+    --blue-ink:#FF8B57;
+    --azzurro:#F2C24A;
     --red:#F26856;
-    --red-ink:#F79684;
-    --green:#6FC38E;
-    --line:rgba(231,243,248,0.16);
+    --red-ink:#FFA089;
+    --green:#7DC28C;
+    --line:rgba(245,230,198,0.16);
+    --deep:#3A0F0C;
+    --deep-2:#2A0A08;
+    --deep-text:#F5E6C6;
   }
 }
 :root[data-theme="dark"]{
-  --cream:#0E1A22; --cream-2:#16323F; --ink:#E7F3F8; --ink-soft:#9FBACB;
-  --blue:#4FB0E6; --blue-ink:#8AD4F5; --azzurro:#38C7F0;
-  --red:#F26856; --red-ink:#F79684; --green:#6FC38E;
-  --line:rgba(231,243,248,0.16);
+  --cream:#241010; --cream-2:#3A1614; --ink:#F5E6C6; --ink-soft:#D9BF88;
+  --blue:#E85E1F; --blue-ink:#FF8B57; --azzurro:#F2C24A;
+  --red:#F26856; --red-ink:#FFA089; --green:#7DC28C;
+  --line:rgba(245,230,198,0.16);
+  --deep:#3A0F0C; --deep-2:#2A0A08; --deep-text:#F5E6C6;
 }
 :root[data-theme="light"]{
-  --cream:#FAFDFE; --cream-2:#E4F4FA; --ink:#152430; --ink-soft:#4C6072;
-  --blue:#1467A6; --blue-ink:#0E3F63; --azzurro:#1FB2E0;
-  --red:#E0392A; --red-ink:#B32E21; --green:#3F8F5C;
-  --line:rgba(20,103,166,0.16);
+  --cream:#FBF3E4; --cream-2:#F1E4C7; --ink:#3A0F0C; --ink-soft:#7A2521;
+  --blue:#C93832; --blue-ink:#9A211C; --azzurro:#D9A94E;
+  --red:#C93832; --red-ink:#9A211C; --green:#3F7A47;
+  --line:rgba(154,33,28,0.18);
+  --deep:#9A211C; --deep-2:#7A1A16; --deep-text:#FBF3E4;
 }
 
 *{box-sizing:border-box;}
@@ -116,22 +125,40 @@ img{max-width:100%;display:block;}
 }
 
 h1,h2,h3,h4{
-  font-family:"Fredoka",sans-serif;
-  font-weight:700;
+  font-family:"Alfa Slab One","Fredoka",Georgia,serif;
+  font-weight:400;
+  letter-spacing:.01em;
   margin:0 0 10px;
   text-wrap:balance;
+  color:var(--red);
+  line-height:1.02;
 }
+h1{font-size:clamp(2.4rem, 6vw, 4.2rem); text-transform:uppercase;}
+h2{font-size:clamp(1.8rem, 4vw, 2.8rem); text-transform:uppercase;}
+h3{font-size:clamp(1.2rem, 2.4vw, 1.6rem);}
 p{margin:0 0 14px;}
+em, .accent-serif{font-family:"Fraunces",Georgia,serif; font-style:italic;}
 
-/* ---------- checkerboard divider (trattoria) ---------- */
+/* ---------- checkerboard divider (trattoria) — poster style ---------- */
 .check-rule{
-  height:9px; width:100%;
+  height:22px; width:100%;
   background-image:
-    linear-gradient(45deg, var(--blue) 25%, transparent 25%, transparent 75%, var(--blue) 75%, var(--blue)),
-    linear-gradient(45deg, var(--blue) 25%, transparent 25%, transparent 75%, var(--blue) 75%, var(--blue));
-  background-size:9px 9px; background-position:0 0, 4.5px 4.5px;
-  opacity:0.5;
+    linear-gradient(45deg, var(--red) 25%, transparent 25%, transparent 75%, var(--red) 75%, var(--red)),
+    linear-gradient(45deg, var(--red) 25%, transparent 25%, transparent 75%, var(--red) 75%, var(--red));
+  background-size:22px 22px; background-position:0 0, 11px 11px;
+  opacity:1;
 }
+/* Bordi a scacchi orizzontali usabili come cornice sopra/sotto a una sezione */
+.checker-top, .checker-bottom{position:relative;}
+.checker-top::before, .checker-bottom::after{
+  content:""; display:block; width:100%; height:22px;
+  background-image:
+    linear-gradient(45deg, var(--red) 25%, transparent 25%, transparent 75%, var(--red) 75%, var(--red)),
+    linear-gradient(45deg, var(--red) 25%, transparent 25%, transparent 75%, var(--red) 75%, var(--red));
+  background-size:22px 22px; background-position:0 0, 11px 11px;
+}
+.checker-top::before{margin-bottom:24px;}
+.checker-bottom::after{margin-top:24px;}
 
 /* ---------- header / nav — banda scura permanente, come il footer ---------- */
 .site-header{
