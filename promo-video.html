@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Promo video · Arti in Pizza</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+  :root{
+    --red:#E0392A; --red-ink:#B32E21; --cream:#FAFDFE; --ink:#152430;
+    --gold:#F2C24A;
+  }
+  html,body{margin:0;padding:0;background:#111;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--cream);}
+  .stage{
+    position:relative; width:1080px; height:1080px; margin:0 auto;
+    overflow:hidden; background:#000;
+    /* scala per anteprima su schermi piccoli */
+  }
+  @media (max-width: 1100px){
+    .stage{ transform-origin: top left; transform: scale(calc(100vw / 1080)); }
+    body{ height: calc(100vw); overflow:hidden; }
+  }
+  .slide{ position:absolute; inset:0; opacity:0; }
+  .slide img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .slide::after{
+    content:""; position:absolute; inset:0;
+    background: linear-gradient(180deg, rgba(0,0,0,.15) 0%, rgba(0,0,0,.0) 30%, rgba(0,0,0,.55) 100%);
+  }
+  .overlay{
+    position:absolute; left:0; right:0; bottom:0; padding:48px 60px 64px;
+    z-index:3; color:#fff; text-align:left;
+  }
+  .tag{
+    display:inline-block; background:var(--red); color:#fff;
+    padding:10px 20px; border-radius:999px;
+    font-weight:800; letter-spacing:.14em; font-size:26px;
+    box-shadow:0 8px 24px rgba(0,0,0,.4);
+  }
+  .title{ font-size:74px; line-height:1.05; margin:18px 0 8px; font-weight:900; text-shadow:0 4px 18px rgba(0,0,0,.5); }
+  .subtitle{ font-size:34px; margin:0; opacity:.95; text-shadow:0 3px 12px rgba(0,0,0,.5); }
+
+  /* Card centrali per lo slide finale */
+  .final{
+    position:absolute; inset:0; z-index:4; opacity:0;
+    background: radial-gradient(1200px 800px at 50% 40%, #F26856 0%, #E0392A 55%, #7A1E12 100%);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px;
+    text-align:center;
+  }
+  .final .brand{
+    font-size:34px; letter-spacing:.2em; font-weight:800; opacity:.9;
+  }
+  .final h2{ font-size:96px; line-height:1; margin:14px 0 10px; font-weight:900; }
+  .final h2 em{ font-style:normal; background:var(--gold); color:var(--red-ink); padding:0 20px; border-radius:22px; }
+  .final .lede{ font-size:36px; max-width:900px; margin:12px auto 34px; opacity:.95; }
+  .choices{ display:flex; gap:20px; justify-content:center; margin-top:8px; flex-wrap:wrap;}
+  .choice{
+    background:rgba(255,255,255,.14); border:2px solid rgba(255,255,255,.5);
+    border-radius:22px; padding:22px 26px; min-width:340px;
+  }
+  .choice .icon{ font-size:64px; display:block; margin-bottom:6px;}
+  .choice h3{ margin:0 0 4px; font-size:34px;}
+  .choice p{ margin:0; font-size:24px; opacity:.95;}
+
+  .cta{
+    margin-top:34px; background:#fff; color:var(--red-ink);
+    padding:22px 40px; border-radius:999px; font-weight:900; font-size:38px;
+    box-shadow:0 12px 30px rgba(0,0,0,.35);
+    display:inline-block;
+  }
+  .site{ margin-top:22px; font-size:28px; letter-spacing:.08em; opacity:.9;}
+
+  /* Timeline animazione: 4 slide foto x 2.5s + finale 5s = 15s totali */
+  @keyframes reveal { 0%{opacity:0; transform:scale(1.06);} 10%{opacity:1; transform:scale(1);} 100%{opacity:1; transform:scale(1);} }
+  @keyframes fade { 0%,100%{opacity:0;} 6%,90%{opacity:1;} }
+  @keyframes finalShow { 0%,66%{opacity:0;} 68%,100%{opacity:1;} }
+
+  .slide{ animation: fade 15s linear infinite; }
+  .s1{ animation-delay: 0s; }
+  .s2{ animation-delay: 2.5s; }
+  .s3{ animation-delay: 5s; }
+  .s4{ animation-delay: 7.5s; }
+  /* le photo-slide durano ognuna 2.5s in una loop di 15s: overriding con nth timings */
+  .stage .slide{ animation-duration: 10s; animation-iteration-count: 1; animation-fill-mode: forwards; }
+  .stage .s1{ animation: fadeSlide 10s linear 0s 1 forwards; }
+  .stage .s2{ animation: fadeSlide 10s linear 2.5s 1 forwards; }
+  .stage .s3{ animation: fadeSlide 10s linear 5s 1 forwards; }
+  .stage .s4{ animation: fadeSlide 10s linear 7.5s 1 forwards; }
+  @keyframes fadeSlide {
+    0%   { opacity:0; transform:scale(1.06); }
+    6%   { opacity:1; transform:scale(1.0); }
+    22%  { opacity:1; transform:scale(1.0); }
+    28%  { opacity:0; }
+    100% { opacity:0; }
+  }
+  .final{ animation: finalIn 15s linear 0s 1 forwards; }
+  @keyframes finalIn {
+    0%,66%{ opacity:0; transform:scale(.98);}
+    70%   { opacity:1; transform:scale(1);}
+    100%  { opacity:1; transform:scale(1);}
+  }
+  .overlay{ animation: overlayIn 15s linear 0s 1 forwards; }
+  @keyframes overlayIn {
+    0%   { opacity:0; transform:translateY(20px);}
+    8%   { opacity:1; transform:translateY(0);}
+    62%  { opacity:1;}
+    66%  { opacity:0;}
+    100% { opacity:0;}
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="slide s1"><img src="assets/img/promo/1.webp" alt=""></div>
+    <div class="slide s2"><img src="assets/img/promo/2.webp" alt=""></div>
+    <div class="slide s3"><img src="assets/img/promo/3.webp" alt=""></div>
+    <div class="slide s4"><img src="assets/img/promo/4.webp" alt=""></div>
+
+    <div class="overlay">
+      <span class="tag">ARTI IN PIZZA · COMO</span>
+      <h1 class="title">Pizza vera,<br>dal 1997.</h1>
+      <p class="subtitle">Impasto lavorato ogni giorno. Senza scorciatoie.</p>
+    </div>
+
+    <div class="final">
+      <div class="brand">ARTI IN PIZZA · COMO · DAL 1997</div>
+      <h2>Ordina in asporto<br>dal sito e hai <em>in omaggio</em></h2>
+      <p class="lede">Scegli tu al checkout:</p>
+      <div class="choices">
+        <div class="choice">
+          <span class="icon" aria-hidden="true">🥤🍟</span>
+          <h3>Bibita + patatine</h3>
+          <p>Lattina 33 cl + patatine fritte</p>
+        </div>
+        <div class="choice">
+          <span class="icon" aria-hidden="true">🍺</span>
+          <h3>Birra in vetro</h3>
+          <p>(senza patatine)</p>
+        </div>
+      </div>
+      <div class="cta">ordina su artiinpizza.com</div>
+      <div class="site">Via Carloni 12, Como · 031 300809</div>
+    </div>
+  </div>
+</body>
+</html>
